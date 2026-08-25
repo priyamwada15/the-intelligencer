@@ -7,3 +7,4 @@
 - Figma's icon layers are literally named `lucide/arrow-left` etc., confirming Lucide as the intended icon set — used `lucide-react` directly instead of hand-drawn icons.
 - The 32×32 date-nav buttons are visually pixel-accurate to Figma, but wrapped in a 44×44 tap target to meet iOS HIG's minimum touch-target size without changing the visible design — first concrete "iOS-quality" decision for the portfolio narrative.
 - This phase is fully static: no swipe, no working filters, no working date nav. That's Phase 2.
+- The plan specified Next.js 15, but `create-next-app@latest` installed Next.js 16.3.3 with React 19.2 at scaffold time; the newer version was kept since it's what the tool actually installed. The auto-generated `AGENTS.md`/`CLAUDE.md` Next-16 agent-rules files are committed intentionally, not accidentally.
