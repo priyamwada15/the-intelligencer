@@ -1,13 +1,6 @@
-import type { CategoryId } from "@/lib/categories";
+import type { Article } from "@/lib/article";
 
-export type Article = {
-  category: CategoryId;
-  headline: string;
-  summary: string;
-  source: string;
-  timestamp: string;
-  url: string;
-};
+export type { Article };
 
 export const placeholderArticle: Article = {
   category: "MODELS",
