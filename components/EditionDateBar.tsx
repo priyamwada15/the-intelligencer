@@ -9,7 +9,7 @@ function DateNavButton({ direction }: { direction: "prev" | "next" }) {
       aria-label={label}
       className="flex h-11 w-11 items-center justify-center"
     >
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-lime-100">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-lime">
         <Icon className="h-4 w-4 text-text-accent" strokeWidth={1.5} />
       </span>
     </button>
@@ -21,7 +21,7 @@ export function EditionDateBar({ date }: { date: string }) {
     <div className="flex items-center px-6 py-4">
       <DateNavButton direction="prev" />
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-lg text-text-primary">{date}</p>
+        <p className="text-heading text-text-primary">{date}</p>
       </div>
       <DateNavButton direction="next" />
     </div>

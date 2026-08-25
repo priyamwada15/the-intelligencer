@@ -1,15 +1,15 @@
 import { Leaf } from "lucide-react";
-import { CATEGORIES, getCategoryStyle, type CategoryId } from "@/lib/categories";
+import { CATEGORIES, getCategoryStyle, type CategoryFilter } from "@/lib/categories";
 
 export function FilterChips({
   activeCategory,
 }: {
-  activeCategory: "ALL" | CategoryId;
+  activeCategory: CategoryFilter;
 }) {
-  const allStyle =
-    activeCategory === "ALL"
-      ? "bg-accent text-text-primary"
-      : "bg-transparent text-text-secondary";
+  const { chipClass: allChipClass } = getCategoryStyle(
+    "ALL",
+    activeCategory === "ALL",
+  );
 
   return (
     <nav
@@ -18,7 +18,7 @@ export function FilterChips({
     >
       <button
         type="button"
-        className={`flex h-[30px] shrink-0 items-center gap-1.5 rounded-md px-4 text-sm ${allStyle}`}
+        className={`flex h-[30px] shrink-0 items-center gap-1.5 rounded-md px-4 text-label ${allChipClass}`}
       >
         <Leaf className="h-3.5 w-3.5" strokeWidth={1.8} />
         All
@@ -33,7 +33,7 @@ export function FilterChips({
           <button
             key={category.id}
             type="button"
-            className={`flex h-[30px] shrink-0 items-center gap-1.5 rounded-md px-3 text-sm ${chipClass}`}
+            className={`flex h-[30px] shrink-0 items-center gap-1.5 rounded-md px-3 text-label ${chipClass}`}
           >
             <Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
             {category.label}
