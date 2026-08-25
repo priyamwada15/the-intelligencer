@@ -16,6 +16,8 @@ export type CategoryId =
   | "POLICY"
   | "RESEARCH";
 
+export type CategoryFilter = "ALL" | CategoryId;
+
 export type Category = {
   id: CategoryId;
   label: string;
@@ -32,7 +34,7 @@ export const CATEGORIES: Category[] = [
 ];
 
 export function getCategoryStyle(
-  categoryId: CategoryId,
+  categoryId: CategoryFilter,
   isActive: boolean,
 ): { chipClass: string; badgeClass: string } {
   const chipClass = isActive
@@ -42,7 +44,8 @@ export function getCategoryStyle(
   // The in-card category badge (e.g. the "Models" pill inside the story
   // card itself) is always filled — only the filter-row chips distinguish
   // active vs. inactive. categoryId is accepted for a future per-category
-  // accent variant; every category currently shares the same accent fill.
+  // accent variant (and to allow the "All" chip to share this function);
+  // every category currently shares the same accent fill.
   void categoryId;
   const badgeClass = "bg-accent text-text-primary";
 
