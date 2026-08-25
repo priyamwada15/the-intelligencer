@@ -14,7 +14,6 @@ export function StoryCard({
   total: number;
 }) {
   const category = CATEGORIES.find((c) => c.id === article.category);
-  const Icon = category?.icon;
   const { badgeClass } = getCategoryStyle(article.category, true);
 
   return (
@@ -33,8 +32,7 @@ export function StoryCard({
         className={`relative z-[2] flex min-h-[455px] flex-col gap-6 border-[0.8px] border-border-black bg-surface-card p-6 shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)] ${CARD_RADIUS}`}
       >
         <div className="flex items-center justify-between">
-          <span className={`flex h-[27px] items-center gap-1.5 rounded-md px-4 text-label-sm ${badgeClass}`}>
-            {Icon ? <Icon className="h-3.5 w-3.5" strokeWidth={1.8} /> : null}
+          <span className={`flex h-[27px] items-center rounded-md px-4 text-label-sm ${badgeClass}`}>
             {category?.label ?? article.category}
           </span>
           <span className="text-micro text-text-secondary">

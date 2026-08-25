@@ -1,13 +1,3 @@
-import {
-  Sprout,
-  PackageOpen,
-  WalletCards,
-  Network,
-  Scale,
-  FlaskConical,
-  type LucideIcon,
-} from "lucide-react";
-
 export type CategoryId =
   | "MODELS"
   | "PRODUCTS"
@@ -21,16 +11,15 @@ export type CategoryFilter = "ALL" | CategoryId;
 export type Category = {
   id: CategoryId;
   label: string;
-  icon: LucideIcon;
 };
 
 export const CATEGORIES: Category[] = [
-  { id: "MODELS", label: "Models", icon: Sprout },
-  { id: "PRODUCTS", label: "Products", icon: PackageOpen },
-  { id: "FUNDING", label: "Funding", icon: WalletCards },
-  { id: "INDUSTRY", label: "Industry", icon: Network },
-  { id: "POLICY", label: "Policy", icon: Scale },
-  { id: "RESEARCH", label: "Research", icon: FlaskConical },
+  { id: "MODELS", label: "Models" },
+  { id: "PRODUCTS", label: "Products" },
+  { id: "FUNDING", label: "Funding" },
+  { id: "INDUSTRY", label: "Industry" },
+  { id: "POLICY", label: "Policy" },
+  { id: "RESEARCH", label: "Research" },
 ];
 
 export function getCategoryStyle(
