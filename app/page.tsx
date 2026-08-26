@@ -2,18 +2,19 @@ import { IntelligencerScreen } from "@/components/IntelligencerScreen";
 import { EDITIONS } from "@/lib/editions";
 import { fetchTechNews } from "@/lib/newsdata";
 import { buildTodayEdition } from "@/lib/buildEdition";
+import { shouldUseLiveData } from "@/lib/liveMode";
 import type { Edition } from "@/lib/editions";
 
 async function getTodayEdition(): Promise<Edition> {
   const placeholderToday = EDITIONS[0];
   const apiKey = process.env.NEWSDATA_API_KEY;
 
-  if (!apiKey) {
+  if (!shouldUseLiveData(apiKey, process.env.NEWS_LIVE_MODE)) {
     return placeholderToday;
   }
 
   try {
-    const rawArticles = await fetchTechNews(apiKey);
+    const rawArticles = await fetchTechNews(apiKey!);
     const liveEdition = buildTodayEdition(rawArticles);
     if (liveEdition.articles.length === 0) {
       return placeholderToday;

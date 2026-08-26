@@ -15,7 +15,9 @@ Open [http://localhost:3000](http://localhost:3000) to view it.
 
 ## Environment variables
 
-Copy `.env.local.example` to `.env.local` and add a free NewsData.io API key (sign up at https://newsdata.io/register) to see real, live AI news for today's edition. Without a key, the app runs fine and falls back to placeholder data — nothing breaks either way.
+Copy `.env.local.example` to `.env.local`:
+- `NEWSDATA_API_KEY` — a free NewsData.io key (sign up at https://newsdata.io/register). Without one, the app always shows placeholder data for today's edition.
+- `NEWS_LIVE_MODE` — must be exactly `true` for the app to actually call the live API, even when a key is present. Defaults to off, so you can hold a key locally while developing without it changing your local data. Set to `true` when you're ready to verify live data end-to-end or before deploying.
 
 ## Scripts
 
