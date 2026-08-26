@@ -26,4 +26,22 @@ describe("resolveSwipeDirection", () => {
     expect(resolveSwipeDirection(80)).toBeNull();
     expect(resolveSwipeDirection(-80)).toBeNull();
   });
+
+  it("commits on a fast flick even when the distance is under the threshold", () => {
+    expect(resolveSwipeDirection(20, 80, -600)).toBe("next");
+    expect(resolveSwipeDirection(-20, 80, 600)).toBe("prev");
+  });
+
+  it("ignores velocity under its threshold when distance is also under the threshold", () => {
+    expect(resolveSwipeDirection(20, 80, -100)).toBeNull();
+  });
+
+  it("distance past threshold wins even if velocity direction disagrees", () => {
+    expect(resolveSwipeDirection(-120, 80, 50)).toBe("next");
+  });
+
+  it("respects a custom velocity threshold", () => {
+    expect(resolveSwipeDirection(20, 80, -300, 1000)).toBeNull();
+    expect(resolveSwipeDirection(20, 80, -300, 200)).toBe("next");
+  });
 });
