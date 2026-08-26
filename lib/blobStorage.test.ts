@@ -78,7 +78,7 @@ describe("writeEdition", () => {
     expect(putMock).toHaveBeenCalledWith(
       "editions/2026-08-26.json",
       JSON.stringify({ dateKey: "2026-08-26", articles: [] }),
-      expect.objectContaining({ addRandomSuffix: false, token: "test-token" }),
+      expect.objectContaining({ addRandomSuffix: false, allowOverwrite: true, token: "test-token" }),
     );
   });
 });

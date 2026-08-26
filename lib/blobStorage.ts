@@ -62,6 +62,7 @@ export async function writeEdition(edition: StoredEdition, token: string): Promi
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    allowOverwrite: true,
     token,
   });
 }
