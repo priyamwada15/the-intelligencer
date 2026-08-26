@@ -5,16 +5,17 @@ import { Header } from "./Header";
 import { EditionDateBar } from "./EditionDateBar";
 import { FilterChips } from "./FilterChips";
 import { StoryCard } from "./StoryCard";
-import { EDITIONS, filterArticles, clampIndex, canGoToOlderEdition, canGoToNewerEdition } from "@/lib/editions";
+import { filterArticles, clampIndex, canGoToOlderEdition, canGoToNewerEdition } from "@/lib/editions";
+import type { Edition } from "@/lib/editions";
 import type { CategoryFilter } from "@/lib/categories";
 import type { SwipeDirection } from "@/lib/swipe";
 
-export function IntelligencerScreen() {
+export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
   const [dateIndex, setDateIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("ALL");
   const [cardIndex, setCardIndex] = useState(0);
 
-  const edition = EDITIONS[dateIndex];
+  const edition = editions[dateIndex];
   const articles = filterArticles(edition, activeCategory);
   const safeIndex = clampIndex(cardIndex, articles.length);
   const activeArticle = articles[safeIndex];
@@ -25,13 +26,13 @@ export function IntelligencerScreen() {
   };
 
   const handlePrevDate = () => {
-    setDateIndex((current) => clampIndex(current + 1, EDITIONS.length));
+    setDateIndex((current) => clampIndex(current + 1, editions.length));
     setActiveCategory("ALL");
     setCardIndex(0);
   };
 
   const handleNextDate = () => {
-    setDateIndex((current) => clampIndex(current - 1, EDITIONS.length));
+    setDateIndex((current) => clampIndex(current - 1, editions.length));
     setActiveCategory("ALL");
     setCardIndex(0);
   };
@@ -47,7 +48,7 @@ export function IntelligencerScreen() {
         date={edition.date}
         onPrev={handlePrevDate}
         onNext={handleNextDate}
-        prevDisabled={!canGoToOlderEdition(dateIndex, EDITIONS.length)}
+        prevDisabled={!canGoToOlderEdition(dateIndex, editions.length)}
         nextDisabled={!canGoToNewerEdition(dateIndex)}
       />
       <FilterChips activeCategory={activeCategory} onSelect={handleSelectCategory} />
