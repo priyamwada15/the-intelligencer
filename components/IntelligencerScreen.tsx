@@ -42,7 +42,10 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
   };
 
   return (
-    <main className="mx-auto min-h-screen max-w-[560px] overflow-x-hidden pb-10 pt-12">
+    <main
+      className="mx-auto min-h-screen max-w-[560px] overflow-x-hidden"
+      style={{ paddingTop: "var(--pad-screen-top)", paddingBottom: "var(--pad-screen-bottom)" }}
+    >
       <Header />
       <EditionDateBar
         date={edition.date}

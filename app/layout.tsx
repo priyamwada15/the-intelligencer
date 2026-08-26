@@ -3,7 +3,7 @@ import { Sora, Figtree } from "next/font/google";
 import { DialRoot } from "dialkit";
 import "dialkit/styles.css";
 import "./globals.css";
-import { DevTypeScaleDials } from "@/components/DevTypeScaleDials";
+import { DevPaddingDials } from "@/components/DevPaddingDials";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${sora.variable} ${figtree.variable} font-sora antialiased`}>
         {children}
-        <DevTypeScaleDials />
+        <DevPaddingDials />
         <DialRoot />
       </body>
     </html>

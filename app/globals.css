@@ -50,6 +50,27 @@
   --font-figtree: var(--font-figtree);
 }
 
+:root {
+  /* Vertical (top/bottom only) padding per section, tuned via the
+     DialKit dev panel. Consumed as inline styles, not Tailwind
+     utilities, so each element's top and bottom can vary independently
+     of the other and of its horizontal padding. */
+  --pad-screen-top: 24px;
+  --pad-screen-bottom: 40px;
+
+  --pad-header-top: 12px;
+  --pad-header-bottom: 16px;
+
+  --pad-datebar-top: 16px;
+  --pad-datebar-bottom: 8px;
+
+  --pad-filters-top: 8px;
+  --pad-filters-bottom: 48px;
+
+  --pad-card-top: 24px;
+  --pad-card-bottom: 24px;
+}
+
 body {
   background: var(--color-bg-primary);
 }

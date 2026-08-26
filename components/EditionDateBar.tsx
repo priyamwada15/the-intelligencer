@@ -40,7 +40,10 @@ export function EditionDateBar({
   nextDisabled: boolean;
 }) {
   return (
-    <div className="flex items-center px-6 py-4">
+    <div
+      className="flex items-center px-6"
+      style={{ paddingTop: "var(--pad-datebar-top)", paddingBottom: "var(--pad-datebar-bottom)" }}
+    >
       <DateNavButton direction="prev" onClick={onPrev} disabled={prevDisabled} />
       <div className="flex flex-1 items-center justify-center">
         <p className="text-heading text-text-primary">{date}</p>

@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
 
 /**
- * Dev-only broadcast channel for the DialKit type-scale panel
- * (components/DevTypeScaleDials.tsx). Lets one device's slider drags push
+ * Dev-only broadcast channel for the DialKit padding panel
+ * (components/DevPaddingDials.tsx). Lets one device's slider drags push
  * live updates to every other device viewing the app on the same LAN
  * (e.g. tweak on desktop, watch it update on a phone), via Server-Sent
  * Events over this single Next.js dev server process.
@@ -13,36 +13,40 @@ import type { NextRequest } from "next/server";
  * a real deployment.
  */
 
-export type TypeScaleValues = {
-  display: number;
-  title: number;
-  heading: number;
-  body: number;
-  label: number;
-  labelSm: number;
-  caption: number;
-  micro: number;
+export type PaddingValues = {
+  screenTop: number;
+  screenBottom: number;
+  headerTop: number;
+  headerBottom: number;
+  dateBarTop: number;
+  dateBarBottom: number;
+  filtersTop: number;
+  filtersBottom: number;
+  cardTop: number;
+  cardBottom: number;
 };
 
-const DEFAULT_VALUES: TypeScaleValues = {
-  display: 28,
-  title: 36,
-  heading: 16,
-  body: 15,
-  label: 12,
-  labelSm: 12,
-  caption: 10,
-  micro: 10,
+const DEFAULT_VALUES: PaddingValues = {
+  screenTop: 24,
+  screenBottom: 40,
+  headerTop: 12,
+  headerBottom: 16,
+  dateBarTop: 16,
+  dateBarBottom: 8,
+  filtersTop: 8,
+  filtersBottom: 48,
+  cardTop: 24,
+  cardBottom: 24,
 };
 
-let currentValues: TypeScaleValues = { ...DEFAULT_VALUES };
+let currentValues: PaddingValues = { ...DEFAULT_VALUES };
 const subscribers = new Set<ReadableStreamDefaultController<Uint8Array>>();
 
-function encodeEvent(values: TypeScaleValues): Uint8Array {
+function encodeEvent(values: PaddingValues): Uint8Array {
   return new TextEncoder().encode(`data: ${JSON.stringify(values)}\n\n`);
 }
 
-function broadcast(values: TypeScaleValues) {
+function broadcast(values: PaddingValues) {
   const payload = encodeEvent(values);
   for (const controller of subscribers) {
     try {
@@ -89,7 +93,7 @@ export async function POST(request: NextRequest) {
     return new Response("Not found", { status: 404 });
   }
 
-  const body = (await request.json()) as Partial<TypeScaleValues>;
+  const body = (await request.json()) as Partial<PaddingValues>;
   currentValues = { ...currentValues, ...body };
   broadcast(currentValues);
   return Response.json({ ok: true, values: currentValues });

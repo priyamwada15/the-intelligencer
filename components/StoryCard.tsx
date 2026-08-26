@@ -95,8 +95,10 @@ export function StoryCard({
           transform: `translateX(${dragX}px) rotate(${dragX / 20}deg)`,
           transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
           touchAction: "pan-y",
+          paddingTop: "var(--pad-card-top)",
+          paddingBottom: "var(--pad-card-bottom)",
         }}
-        className={`relative z-[2] flex min-h-[455px] cursor-grab select-none flex-col gap-6 border-[0.8px] border-border-black bg-surface-card p-6 shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-text-accent ${CARD_RADIUS}`}
+        className={`relative z-[2] flex min-h-[455px] cursor-grab select-none flex-col gap-6 border-[0.8px] border-border-black bg-surface-card px-6 shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-text-accent ${CARD_RADIUS}`}
       >
         <div className="flex items-center justify-between">
           <span className={`flex h-[27px] items-center rounded-md px-4 text-label-sm ${badgeClass}`}>

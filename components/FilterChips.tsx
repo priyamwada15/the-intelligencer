@@ -12,7 +12,8 @@ export function FilterChips({
   return (
     <nav
       aria-label="Filter stories by category"
-      className="scrollbar-hide flex gap-2 overflow-x-auto px-6 py-6"
+      className="scrollbar-hide flex gap-2 overflow-x-auto px-6"
+      style={{ paddingTop: "var(--pad-filters-top)", paddingBottom: "var(--pad-filters-bottom)" }}
     >
       <button
         type="button"
