@@ -25,10 +25,10 @@ export type TypeScaleValues = {
 };
 
 const DEFAULT_VALUES: TypeScaleValues = {
-  display: 32,
+  display: 28,
   title: 36,
   heading: 16,
-  body: 16,
+  body: 15,
   label: 12,
   labelSm: 12,
   caption: 10,

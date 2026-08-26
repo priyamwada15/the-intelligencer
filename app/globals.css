@@ -17,7 +17,7 @@
   --color-border-black: #00000014;
 
   /* Type scale (derived from Figma, tuned via the DialKit dev panel) */
-  --text-display: 32px;
+  --text-display: 28px;
   --text-display--line-height: 1.2;
   --text-display--letter-spacing: -1.44px;
 
@@ -28,7 +28,7 @@
   --text-heading: 16px;
   --text-heading--line-height: normal;
 
-  --text-body: 16px;
+  --text-body: 15px;
   --text-body--line-height: 1.45;
   --text-body--letter-spacing: -0.13px;
 

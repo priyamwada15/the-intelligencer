@@ -7,10 +7,10 @@ import type { TypeScaleValues } from "@/app/api/dial-sync/route";
 const SYNC_ENDPOINT = "/api/dial-sync";
 
 const DEFAULTS: Record<keyof TypeScaleValues, [number, number, number]> = {
-  display: [32, 10, 48],
+  display: [28, 10, 48],
   title: [36, 10, 48],
   heading: [16, 8, 32],
-  body: [16, 8, 24],
+  body: [15, 8, 24],
   label: [12, 8, 20],
   labelSm: [12, 8, 18],
   caption: [10, 8, 18],
