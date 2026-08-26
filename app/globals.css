@@ -16,7 +16,7 @@
   --color-border-subtle: #dbe3ca;
   --color-border-black: #00000014;
 
-  /* Type scale (derived from Figma, tuned via the DialKit dev panel) */
+  /* Type scale (derived from Figma) */
   --text-display: 28px;
   --text-display--line-height: 1.2;
   --text-display--letter-spacing: -1.44px;
@@ -51,10 +51,9 @@
 }
 
 :root {
-  /* Vertical (top/bottom only) padding per section, tuned via the
-     DialKit dev panel. Consumed as inline styles, not Tailwind
-     utilities, so each element's top and bottom can vary independently
-     of the other and of its horizontal padding. */
+  /* Vertical (top/bottom only) padding per section. Consumed as inline
+     styles, not Tailwind utilities, so each element's top and bottom can
+     vary independently of the other and of its horizontal padding. */
   --pad-screen-top: 24px;
   --pad-screen-bottom: 40px;
 
