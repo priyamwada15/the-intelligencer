@@ -4,6 +4,7 @@ import {
   getEasternDateKey,
   getEasternHour,
   isScheduledRefreshHour,
+  isForceRunAllowed,
   writeEdition,
   pruneOldEditions,
 } from "@/lib/blobStorage";
@@ -16,8 +17,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const hour = getEasternHour();
-  const forceRun =
-    process.env.NODE_ENV !== "production" && new URL(request.url).searchParams.get("force") === "true";
+  const forceRun = isForceRunAllowed(process.env.NODE_ENV, new URL(request.url).searchParams.get("force"));
 
   if (!isScheduledRefreshHour(hour) && !forceRun) {
     return Response.json({ skipped: true, reason: `hour ${hour} is not a scheduled refresh time` });

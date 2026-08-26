@@ -16,6 +16,7 @@ import {
   getEasternDateKey,
   getEasternHour,
   isScheduledRefreshHour,
+  isForceRunAllowed,
   writeEdition,
   listRecentEditionDateKeys,
   readEdition,
@@ -45,19 +46,49 @@ describe("getEasternHour", () => {
     // 20:00 UTC in January (EST) is 15:00 (3pm) Eastern.
     expect(getEasternHour(new Date("2026-01-26T20:00:00Z"))).toBe(15);
   });
+
+  it("normalizes ICU's '24' midnight quirk to 0", () => {
+    // 04:00 UTC on Aug 27 in EDT (UTC-4) is 00:00 (midnight) Eastern on Aug
+    // 27. Intl's hour12: false formatting for midnight can return "24"
+    // instead of "0" for some locales/ICU versions; the % 24 in
+    // getEasternHour normalizes that back to 0. This case exercises that
+    // normalization directly, not just the 3pm cases above.
+    expect(getEasternHour(new Date("2026-08-27T04:00:00Z"))).toBe(0);
+  });
 });
 
 describe("isScheduledRefreshHour", () => {
-  it("is true for 8, 15, and 21", () => {
+  it("is true for 8, 15, and 21, and the hour immediately after each", () => {
     expect(isScheduledRefreshHour(8)).toBe(true);
+    expect(isScheduledRefreshHour(9)).toBe(true);
     expect(isScheduledRefreshHour(15)).toBe(true);
+    expect(isScheduledRefreshHour(16)).toBe(true);
     expect(isScheduledRefreshHour(21)).toBe(true);
+    expect(isScheduledRefreshHour(22)).toBe(true);
   });
 
-  it("is false for any other hour", () => {
-    expect(isScheduledRefreshHour(9)).toBe(false);
+  it("is false for hours outside the widened windows", () => {
+    expect(isScheduledRefreshHour(10)).toBe(false);
+    expect(isScheduledRefreshHour(12)).toBe(false);
+    expect(isScheduledRefreshHour(17)).toBe(false);
+    expect(isScheduledRefreshHour(23)).toBe(false);
     expect(isScheduledRefreshHour(0)).toBe(false);
-    expect(isScheduledRefreshHour(22)).toBe(false);
+  });
+});
+
+describe("isForceRunAllowed", () => {
+  it("is true when force=true and not in production", () => {
+    expect(isForceRunAllowed("development", "true")).toBe(true);
+  });
+
+  it("is false when force=true but in production", () => {
+    expect(isForceRunAllowed("production", "true")).toBe(false);
+  });
+
+  it("is false when force is missing or any other value, even outside production", () => {
+    expect(isForceRunAllowed("development", null)).toBe(false);
+    expect(isForceRunAllowed("development", "false")).toBe(false);
+    expect(isForceRunAllowed("development", "1")).toBe(false);
   });
 });
 
@@ -140,6 +171,32 @@ describe("readEdition", () => {
     vi.mocked(fetch).mockResolvedValue({ ok: false } as Response);
     expect(await readEdition("2026-08-26", "test-token")).toBeNull();
   });
+
+  it("returns null instead of throwing when the fetch itself rejects (network failure)", async () => {
+    listMock.mockResolvedValue({ blobs: [makeBlob("2026-08-26")] });
+    vi.mocked(fetch).mockRejectedValue(new Error("network down"));
+    await expect(readEdition("2026-08-26", "test-token")).resolves.toBeNull();
+  });
+
+  it("returns null instead of throwing when the response body isn't valid JSON", async () => {
+    listMock.mockResolvedValue({ blobs: [makeBlob("2026-08-26")] });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => {
+        throw new SyntaxError("Unexpected token");
+      },
+    } as unknown as Response);
+    await expect(readEdition("2026-08-26", "test-token")).resolves.toBeNull();
+  });
+
+  it("returns null when the parsed JSON doesn't match the StoredEdition shape", async () => {
+    listMock.mockResolvedValue({ blobs: [makeBlob("2026-08-26")] });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ dateKey: "2026-08-26", articles: "not-an-array" }),
+    } as Response);
+    expect(await readEdition("2026-08-26", "test-token")).toBeNull();
+  });
 });
 
 describe("pruneOldEditions", () => {
@@ -161,7 +218,11 @@ describe("pruneOldEditions", () => {
     await pruneOldEditions("test-token");
     expect(delMock).toHaveBeenCalledTimes(1);
     const deletedUrls = delMock.mock.calls[0][0] as string[];
-    expect(deletedUrls).toHaveLength(8);
-    expect(deletedUrls).not.toEqual(expect.arrayContaining([makeBlob("2026-08-15").url]));
+    // Dates sort newest-first, so the 8 oldest of the 15 (2026-08-01 through
+    // 2026-08-08) are exactly the ones that should be deleted. Asserting the
+    // exact set (not just the count and that the newest survives) would
+    // catch an off-by-one or a wrong-direction slice.
+    const expectedDeletedUrls = dateKeys.slice(0, 8).map((dateKey) => makeBlob(dateKey).url);
+    expect([...deletedUrls].sort()).toEqual([...expectedDeletedUrls].sort());
   });
 });

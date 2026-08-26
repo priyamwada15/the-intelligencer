@@ -33,7 +33,25 @@ export function getEasternHour(now: Date = new Date()): number {
 }
 
 export function isScheduledRefreshHour(hour: number): boolean {
-  return hour === 8 || hour === 15 || hour === 21;
+  // Accept each target hour plus the hour immediately after it, since
+  // scheduled GitHub Actions runs are frequently delayed 10-30+ minutes (or
+  // more) past their configured time. A late-delivered trigger that lands in
+  // the following hour would otherwise be silently skipped and that whole
+  // refresh window lost. Writes are idempotent same-date overwrites, so
+  // accepting the extra hour is safe even if both the on-time and delayed
+  // triggers happen to land in a scheduled hour.
+  return (
+    hour === 8 ||
+    hour === 9 ||
+    hour === 15 ||
+    hour === 16 ||
+    hour === 21 ||
+    hour === 22
+  );
+}
+
+export function isForceRunAllowed(nodeEnv: string | undefined, forceParam: string | null): boolean {
+  return nodeEnv !== "production" && forceParam === "true";
 }
 
 function blobPathForDate(dateKey: string): string {
@@ -63,6 +81,11 @@ export async function writeEdition(edition: StoredEdition, token: string): Promi
     contentType: "application/json",
     addRandomSuffix: false,
     allowOverwrite: true,
+    // @vercel/blob defaults cacheControlMaxAge to one month. Because this
+    // path is stable (addRandomSuffix: false), same-day overwrites at
+    // 3pm/9pm could otherwise be hidden behind a month-long CDN cache. 60
+    // seconds is the minimum @vercel/blob allows.
+    cacheControlMaxAge: 60,
     token,
   });
 }
@@ -75,14 +98,29 @@ export async function listRecentEditionDateKeys(
   return blobs.slice(0, limit).map((blob) => blob.dateKey);
 }
 
+function isStoredEditionShape(value: unknown): value is StoredEdition {
+  if (typeof value !== "object" || value === null) return false;
+  const edition = value as Record<string, unknown>;
+  return typeof edition.dateKey === "string" && Array.isArray(edition.articles);
+}
+
 export async function readEdition(dateKey: string, token: string): Promise<StoredEdition | null> {
   const blobs = await listEditionBlobs(token);
   const match = blobs.find((blob) => blob.dateKey === dateKey);
   if (!match) return null;
 
-  const response = await fetch(match.url);
-  if (!response.ok) return null;
-  return (await response.json()) as StoredEdition;
+  // A single bad day (network failure, malformed JSON, or an unexpected
+  // shape) must never throw out of here — callers read multiple dates in
+  // parallel, and one throw would otherwise take down every other good day
+  // along with it.
+  try {
+    const response = await fetch(match.url);
+    if (!response.ok) return null;
+    const parsed: unknown = await response.json();
+    return isStoredEditionShape(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function pruneOldEditions(token: string): Promise<void> {
