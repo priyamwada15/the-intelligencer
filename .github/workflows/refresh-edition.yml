@@ -1,0 +1,25 @@
+name: Refresh edition
+
+on:
+  schedule:
+    # 8:00am ET — EDT (UTC-4) and EST (UTC-5) pair
+    - cron: "0 12 * * *"
+    - cron: "0 13 * * *"
+    # 3:00pm ET — EDT and EST pair
+    - cron: "0 19 * * *"
+    - cron: "0 20 * * *"
+    # 9:00pm ET — EDT and EST pair (falls after midnight UTC)
+    - cron: "0 1 * * *"
+    - cron: "0 2 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call refresh-edition endpoint
+        run: |
+          curl --fail --show-error \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/refresh-edition"
