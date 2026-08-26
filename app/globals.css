@@ -16,29 +16,29 @@
   --color-border-subtle: #dbe3ca;
   --color-border-black: #00000014;
 
-  /* Type scale (derived from Figma) */
-  --text-display: 36px;
+  /* Type scale (derived from Figma, tuned via the DialKit dev panel) */
+  --text-display: 32px;
   --text-display--line-height: 1.2;
   --text-display--letter-spacing: -1.44px;
 
-  --text-title: 32px;
+  --text-title: 36px;
   --text-title--line-height: 40px;
   --text-title--letter-spacing: -1.155px;
 
-  --text-heading: 18px;
+  --text-heading: 16px;
   --text-heading--line-height: normal;
 
   --text-body: 16px;
   --text-body--line-height: 1.45;
   --text-body--letter-spacing: -0.13px;
 
-  --text-label: 14px;
+  --text-label: 12px;
   --text-label--line-height: 18px;
 
   --text-label-sm: 12px;
   --text-label-sm--line-height: 15px;
 
-  --text-caption: 12px;
+  --text-caption: 10px;
   --text-caption--line-height: normal;
 
   --text-micro: 10px;
