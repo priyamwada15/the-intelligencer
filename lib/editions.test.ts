@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EDITIONS, filterArticles, clampIndex } from "./editions";
+import { EDITIONS, filterArticles, clampIndex, canGoToOlderEdition, canGoToNewerEdition } from "./editions";
 
 describe("EDITIONS", () => {
   it("has three editions in newest-first order", () => {
@@ -64,5 +64,27 @@ describe("clampIndex", () => {
   it("returns 0 for a zero-length list", () => {
     expect(clampIndex(0, 0)).toBe(0);
     expect(clampIndex(3, 0)).toBe(0);
+  });
+});
+
+describe("canGoToOlderEdition", () => {
+  it("returns true when there are older editions left", () => {
+    expect(canGoToOlderEdition(0, 3)).toBe(true);
+    expect(canGoToOlderEdition(1, 3)).toBe(true);
+  });
+
+  it("returns false at the oldest edition", () => {
+    expect(canGoToOlderEdition(2, 3)).toBe(false);
+  });
+});
+
+describe("canGoToNewerEdition", () => {
+  it("returns true when not on the newest edition", () => {
+    expect(canGoToNewerEdition(1)).toBe(true);
+    expect(canGoToNewerEdition(2)).toBe(true);
+  });
+
+  it("returns false at the newest edition (index 0)", () => {
+    expect(canGoToNewerEdition(0)).toBe(false);
   });
 });

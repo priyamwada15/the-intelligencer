@@ -3,11 +3,10 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { ExternalLink } from "lucide-react";
 import { CATEGORIES, getCategoryStyle } from "@/lib/categories";
-import { resolveSwipeDirection, type SwipeDirection } from "@/lib/swipe";
+import { resolveSwipeDirection, SWIPE_THRESHOLD_PX, type SwipeDirection } from "@/lib/swipe";
 import type { Article } from "@/lib/article";
 
 const CARD_RADIUS = "rounded-[26px_26px_34px_24px]";
-const SWIPE_THRESHOLD_PX = 80;
 
 export function StoryCard({
   article,
@@ -30,9 +29,11 @@ export function StoryCard({
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     // Let taps on the footer link (or its icon) pass through untouched. Setting
     // pointer capture on the article would retarget the resulting click event to
-    // the article itself (this is spec'd/observed Chrome behavior), which bypasses
-    // the anchor's default navigation even for a plain tap with no drag.
-    if ((event.target as HTMLElement).closest("a")) return;
+    // the article itself (observed Chromium behavior, not settled in the Pointer
+    // Events spec — see docs/decision-log.md's Phase 2 entry for the full
+    // investigation), which bypasses the anchor's default navigation even for a
+    // plain tap with no drag.
+    if ((event.target as Element).closest("a")) return;
     pointerStartX.current = event.clientX;
     setIsDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -95,7 +96,7 @@ export function StoryCard({
           transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
           touchAction: "pan-y",
         }}
-        className={`relative z-[2] flex min-h-[455px] cursor-grab flex-col gap-6 border-[0.8px] border-border-black bg-surface-card p-6 shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-text-accent ${CARD_RADIUS}`}
+        className={`relative z-[2] flex min-h-[455px] cursor-grab select-none flex-col gap-6 border-[0.8px] border-border-black bg-surface-card p-6 shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-text-accent ${CARD_RADIUS}`}
       >
         <div className="flex items-center justify-between">
           <span className={`flex h-[27px] items-center rounded-md px-4 text-label-sm ${badgeClass}`}>

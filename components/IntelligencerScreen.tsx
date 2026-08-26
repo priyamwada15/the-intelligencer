@@ -5,7 +5,7 @@ import { Header } from "./Header";
 import { EditionDateBar } from "./EditionDateBar";
 import { FilterChips } from "./FilterChips";
 import { StoryCard } from "./StoryCard";
-import { EDITIONS, filterArticles, clampIndex } from "@/lib/editions";
+import { EDITIONS, filterArticles, clampIndex, canGoToOlderEdition, canGoToNewerEdition } from "@/lib/editions";
 import type { CategoryFilter } from "@/lib/categories";
 import type { SwipeDirection } from "@/lib/swipe";
 
@@ -25,19 +25,19 @@ export function IntelligencerScreen() {
   };
 
   const handlePrevDate = () => {
-    setDateIndex((current) => Math.min(EDITIONS.length - 1, current + 1));
+    setDateIndex((current) => clampIndex(current + 1, EDITIONS.length));
     setActiveCategory("ALL");
     setCardIndex(0);
   };
 
   const handleNextDate = () => {
-    setDateIndex((current) => Math.max(0, current - 1));
+    setDateIndex((current) => clampIndex(current - 1, EDITIONS.length));
     setActiveCategory("ALL");
     setCardIndex(0);
   };
 
   const handleSwipe = (direction: SwipeDirection) => {
-    setCardIndex((current) => clampIndex(direction === "next" ? current + 1 : current - 1, articles.length));
+    setCardIndex(clampIndex(direction === "next" ? safeIndex + 1 : safeIndex - 1, articles.length));
   };
 
   return (
@@ -47,8 +47,8 @@ export function IntelligencerScreen() {
         date={edition.date}
         onPrev={handlePrevDate}
         onNext={handleNextDate}
-        prevDisabled={dateIndex === EDITIONS.length - 1}
-        nextDisabled={dateIndex === 0}
+        prevDisabled={!canGoToOlderEdition(dateIndex, EDITIONS.length)}
+        nextDisabled={!canGoToNewerEdition(dateIndex)}
       />
       <FilterChips activeCategory={activeCategory} onSelect={handleSelectCategory} />
       {activeArticle ? (

@@ -3,14 +3,12 @@ import type { CategoryFilter } from "@/lib/categories";
 
 export type Edition = {
   date: string;
-  label: string;
   articles: Article[];
 };
 
 export const EDITIONS: Edition[] = [
   {
     date: "Thursday, August 20",
-    label: "Today's edition",
     articles: [
       {
         category: "MODELS",
@@ -43,7 +41,6 @@ export const EDITIONS: Edition[] = [
   },
   {
     date: "Wednesday, August 19",
-    label: "Yesterday's edition",
     articles: [
       {
         category: "FUNDING",
@@ -67,7 +64,6 @@ export const EDITIONS: Edition[] = [
   },
   {
     date: "Tuesday, August 18",
-    label: "Tuesday's edition",
     articles: [
       {
         category: "INDUSTRY",
@@ -100,4 +96,12 @@ export function filterArticles(edition: Edition, category: CategoryFilter): Arti
 export function clampIndex(index: number, length: number): number {
   if (length === 0) return 0;
   return Math.min(Math.max(index, 0), length - 1);
+}
+
+export function canGoToOlderEdition(dateIndex: number, editionsLength: number): boolean {
+  return dateIndex < editionsLength - 1;
+}
+
+export function canGoToNewerEdition(dateIndex: number): boolean {
+  return dateIndex > 0;
 }
