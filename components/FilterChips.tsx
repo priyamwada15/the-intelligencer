@@ -12,7 +12,7 @@ export function FilterChips({
   return (
     <nav
       aria-label="Filter stories by category"
-      className="flex gap-2 overflow-x-auto px-6 py-6"
+      className="scrollbar-hide flex gap-2 overflow-x-auto px-6 py-6"
     >
       <button
         type="button"
