@@ -16,6 +16,17 @@ export type NewsDataResponse = {
   results: NewsDataArticle[];
 };
 
+function isValidArticle(value: unknown): value is NewsDataArticle {
+  if (typeof value !== "object" || value === null) return false;
+  const article = value as Record<string, unknown>;
+  return (
+    typeof article.title === "string" &&
+    typeof article.link === "string" &&
+    typeof article.pubDate === "string" &&
+    typeof article.source_name === "string"
+  );
+}
+
 export function parseNewsDataResponse(json: unknown): NewsDataArticle[] {
   if (typeof json !== "object" || json === null) {
     throw new Error("NewsData.io response was not a JSON object.");
@@ -27,7 +38,7 @@ export function parseNewsDataResponse(json: unknown): NewsDataArticle[] {
   if (!Array.isArray(body.results)) {
     throw new Error("NewsData.io response is missing a 'results' array.");
   }
-  return body.results as NewsDataArticle[];
+  return body.results.filter(isValidArticle);
 }
 
 // NewsData.io free tier caps the `q` query parameter at 100 characters —
@@ -35,7 +46,7 @@ export function parseNewsDataResponse(json: unknown): NewsDataArticle[] {
 // lib/relevance.ts does a second, local pass to filter out anything that
 // slips through (e.g. general "technology" category articles that mention
 // none of these terms only in passing, or vice versa).
-const AI_QUERY = '"AI" OR "artificial intelligence" OR OpenAI OR Anthropic';
+export const AI_QUERY = '"AI" OR "artificial intelligence" OR OpenAI OR Anthropic';
 
 export async function fetchTechNews(apiKey: string): Promise<NewsDataArticle[]> {
   const url = new URL("https://newsdata.io/api/1/latest");

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseNewsDataResponse } from "./newsdata";
+import { parseNewsDataResponse, AI_QUERY } from "./newsdata";
 
 const validArticle = {
   article_id: "abc123",
@@ -48,5 +48,30 @@ describe("parseNewsDataResponse", () => {
     expect(() => parseNewsDataResponse(null)).toThrow();
     expect(() => parseNewsDataResponse("a string")).toThrow();
     expect(() => parseNewsDataResponse(42)).toThrow();
+  });
+
+  it("filters out malformed articles, keeping only valid ones", () => {
+    const malformedArticle = { ...validArticle, title: undefined };
+    const result = parseNewsDataResponse({
+      status: "success",
+      totalResults: 2,
+      results: [validArticle, malformedArticle],
+    });
+    expect(result).toEqual([validArticle]);
+  });
+
+  it("returns an empty array when every article is malformed", () => {
+    const result = parseNewsDataResponse({
+      status: "success",
+      totalResults: 2,
+      results: [{ title: "Missing everything else" }, { link: "https://example.com" }],
+    });
+    expect(result).toEqual([]);
+  });
+});
+
+describe("AI_QUERY", () => {
+  it("stays within NewsData.io's free-tier 100-character limit for the 'q' parameter", () => {
+    expect(AI_QUERY.length).toBeLessThanOrEqual(100);
   });
 });
