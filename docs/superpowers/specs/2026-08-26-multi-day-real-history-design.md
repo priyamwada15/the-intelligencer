@@ -56,6 +56,13 @@ surfaced.
   runs that day.
 - This is what makes "yesterday's history = its 9pm edition" fall out for free:
   nothing writes to a date's blob again once the calendar date has moved on.
+- **Never overwrite with emptiness.** If a refresh finds zero AI-relevant articles
+  (NewsData.io has nothing new, or every result gets filtered out), the route
+  skips the write entirely rather than replacing a populated edition with an empty
+  one. Whatever was already stored — today's from an earlier run, or the most
+  recent prior day if today has no blob yet — keeps being served. The app must
+  always have some content to show; it should never show an empty state because
+  one refresh happened to come back empty.
 - **Retention:** after each successful write, the route lists all stored dates. If
   there are more than 14, it deletes the oldest down to 7. This is a self-sustaining
   batch-cleanup rule (grow to 14, prune to 7, repeat) rather than a strict
@@ -103,6 +110,9 @@ builds *and* formats for display in one step) into two responsibilities:
   StoredArticle[] }`.
 - **`buildStoredEdition(rawArticles, dateKey): StoredEdition`** — replaces
   `buildTodayEdition`. Same filter/categorize/slice logic, no timestamp formatting.
+- **`shouldPersistEdition(edition: StoredEdition): boolean`** — new, pure:
+  `edition.articles.length > 0`. The cron route calls this before writing; a
+  `false` result means skip the write and keep whatever is already stored.
 - **`toDisplayEdition(stored: StoredEdition, now?: Date): Edition`** — new. Maps a
   `StoredEdition` to the existing display `Edition` type, computing
   `formatRelativeTime(pubDate, now)` per article at call time.
@@ -158,12 +168,18 @@ module should import `@vercel/blob` directly.
 3. Read `NEWSDATA_API_KEY` and `BLOB_READ_WRITE_TOKEN` from env; `500` if either is
    missing (this route only ever runs where both are configured; a missing var is a
    deployment misconfiguration, not a normal runtime condition to fall back from).
-4. `fetchTechNews` → `buildStoredEdition(raw, getEasternDateKey())` → `writeEdition`
-   → `pruneOldEditions`.
-5. On any thrown error during step 4: `console.error` and return `500`. Unlike
+4. `fetchTechNews` → `buildStoredEdition(raw, getEasternDateKey())`.
+5. If `shouldPersistEdition(edition)` is `false`: skip `writeEdition` and
+   `pruneOldEditions`, return `200` with `{ ok: true, dateKey, articleCount: 0,
+   persisted: false }`. This is a normal, expected outcome (NewsData.io had
+   nothing new), not an error — the previously stored edition for this date (or
+   the most recent prior date, if this is the day's first successful-or-not run)
+   keeps being served.
+6. Otherwise: `writeEdition` → `pruneOldEditions` → `200` with `{ ok: true,
+   dateKey, articleCount, persisted: true }`.
+7. On any thrown error during steps 4–6: `console.error` and return `500`. Unlike
    `page.tsx`, this route has no user-facing fallback to protect — a failed refresh
    should be visible (as a failed GitHub Actions run), not silently swallowed.
-6. Success: `200` with `{ ok: true, dateKey, articleCount }`.
 
 ## Read path (`app/page.tsx`)
 
@@ -188,7 +204,7 @@ is also needed locally to manually test the route's auth check.
 
 - Pure logic gets unit tests, same as every prior phase: `getEasternDateKey`,
   `getEasternHour`, `isScheduledRefreshHour`, `formatEditionDateFromKey`,
-  `buildStoredEdition`, `toDisplayEdition`.
+  `buildStoredEdition`, `toDisplayEdition`, `shouldPersistEdition`.
 - `listRecentEditionDateKeys` and `pruneOldEditions`'s sort/threshold logic are
   unit tested against a mocked `@vercel/blob` module (`vi.mock`), not real network
   calls.
