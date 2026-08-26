@@ -26,7 +26,6 @@ function formatEditionDate(date: Date): string {
     weekday: "long",
     month: "long",
     day: "numeric",
-    year: "numeric",
     timeZone: "UTC",
   });
 }

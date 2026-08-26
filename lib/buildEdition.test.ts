@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { formatRelativeTime, buildTodayEdition } from "./buildEdition";
 import type { NewsDataArticle } from "./newsdata";
+import { EDITIONS } from "./editions";
 
 describe("formatRelativeTime", () => {
   const now = new Date("2026-08-26T12:00:00Z");
@@ -76,8 +77,15 @@ describe("buildTodayEdition", () => {
     expect(buildTodayEdition([], now).articles).toEqual([]);
   });
 
-  it("formats the edition date from the given time", () => {
+  it("formats the edition date from the given time without a year", () => {
     const edition = buildTodayEdition([], now);
-    expect(edition.date).toContain("2026");
+    expect(edition.date).toBe("Wednesday, August 26");
+  });
+
+  it("matches the same date format shape as the placeholder editions in lib/editions.ts", () => {
+    const edition = buildTodayEdition([], now);
+    const dateFormatShape = /^[A-Z][a-z]+, [A-Z][a-z]+ \d{1,2}$/;
+    expect(edition.date).toMatch(dateFormatShape);
+    expect(EDITIONS[0].date).toMatch(dateFormatShape);
   });
 });
