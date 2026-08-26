@@ -22,4 +22,16 @@ describe("isAiRelevant", () => {
     expect(isAiRelevant("A chatbot for customer service", null)).toBe(true);
     expect(isAiRelevant("A new bridge opens downtown", null)).toBe(false);
   });
+
+  it("does not match 'ai' as a bare substring inside ordinary words", () => {
+    expect(isAiRelevant("The mayor said the plan will move forward", "")).toBe(false);
+    expect(isAiRelevant("Retail sales dipped slightly this month", "")).toBe(false);
+    expect(isAiRelevant("The storm hit the coast again this week", "")).toBe(false);
+    expect(isAiRelevant("Startup raises new funding round", "")).toBe(false);
+  });
+
+  it("still matches 'ai' at hyphen and apostrophe word boundaries", () => {
+    expect(isAiRelevant("This is an AI-powered assistant", "")).toBe(true);
+    expect(isAiRelevant("The startup touted AI's potential", "")).toBe(true);
+  });
 });

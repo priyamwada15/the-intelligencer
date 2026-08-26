@@ -33,4 +33,16 @@ describe("categorizeArticle", () => {
   it("prioritizes FUNDING over MODELS when both match", () => {
     expect(categorizeArticle("Model startup raises funding round", "")).toBe("FUNDING");
   });
+
+  it("does not miscategorize 'urban' as POLICY via a bare 'ban' substring", () => {
+    expect(categorizeArticle("New urban housing initiative approved by city council", "")).toBe("INDUSTRY");
+  });
+
+  it("does not miscategorize 'flawed' as POLICY via a bare 'law' substring", () => {
+    expect(categorizeArticle("The company's flawed strategy led to losses", "")).toBe("INDUSTRY");
+  });
+
+  it("does not miscategorize 'happened' as PRODUCTS via a bare 'app' substring", () => {
+    expect(categorizeArticle("The meeting happened as scheduled", "")).toBe("INDUSTRY");
+  });
 });
