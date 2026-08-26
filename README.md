@@ -13,6 +13,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view it.
 
+## Environment variables
+
+Copy `.env.local.example` to `.env.local` and add a free NewsData.io API key (sign up at https://newsdata.io/register) to see real, live AI news for today's edition. Without a key, the app runs fine and falls back to placeholder data — nothing breaks either way.
+
 ## Scripts
 
 - `npm run dev` — start the development server
