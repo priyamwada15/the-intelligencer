@@ -28,6 +28,11 @@ export function StoryCard({
   const pointerStartX = useRef<number | null>(null);
 
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
+    // Let taps on the footer link (or its icon) pass through untouched. Setting
+    // pointer capture on the article would retarget the resulting click event to
+    // the article itself (this is spec'd/observed Chrome behavior), which bypasses
+    // the anchor's default navigation even for a plain tap with no drag.
+    if ((event.target as HTMLElement).closest("a")) return;
     pointerStartX.current = event.clientX;
     setIsDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
