@@ -21,6 +21,12 @@ Copy `.env.local.example` to `.env.local`:
 - `BLOB_READ_WRITE_TOKEN` — a Vercel Blob store's read-write token (Vercel dashboard → Storage → create a Blob store). Used to read and write stored editions.
 - `CRON_SECRET` — any random string. The scheduled refresh job authenticates with this; requests without a matching `Authorization: Bearer` header are rejected.
 
+## GitHub Actions secrets
+
+Once the app is deployed, the scheduled refresh workflow (`.github/workflows/refresh-edition.yml`) needs two repository secrets configured in GitHub (Settings → Secrets and variables → Actions):
+- `CRON_SECRET` — must match the `CRON_SECRET` value set in the deployed app's environment (the same variable described above).
+- `APP_URL` — the deployed app's base URL, no trailing slash (e.g. `https://your-app.vercel.app`).
+
 ## Scripts
 
 - `npm run dev` — start the development server
