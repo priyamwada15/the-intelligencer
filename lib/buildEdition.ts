@@ -1,10 +1,24 @@
 import type { NewsDataArticle } from "@/lib/newsdata";
 import { isAiRelevant } from "@/lib/relevance";
 import { categorizeArticle } from "@/lib/categorize";
-import type { Article } from "@/lib/article";
+import type { CategoryId } from "@/lib/categories";
 import type { Edition } from "@/lib/editions";
 
 const MAX_ARTICLES = 6;
+
+export type StoredArticle = {
+  category: CategoryId;
+  headline: string;
+  summary: string;
+  source: string;
+  pubDate: string;
+  url: string;
+};
+
+export type StoredEdition = {
+  dateKey: string;
+  articles: StoredArticle[];
+};
 
 export function formatRelativeTime(pubDate: string, now: Date = new Date()): string {
   const published = new Date(`${pubDate.replace(" ", "T")}Z`);
@@ -21,8 +35,9 @@ export function formatRelativeTime(pubDate: string, now: Date = new Date()): str
   return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
 }
 
-function formatEditionDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
+export function formatEditionDateFromKey(dateKey: string): string {
+  const noonUtc = new Date(`${dateKey}T12:00:00Z`);
+  return noonUtc.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -30,8 +45,8 @@ function formatEditionDate(date: Date): string {
   });
 }
 
-export function buildTodayEdition(rawArticles: NewsDataArticle[], now: Date = new Date()): Edition {
-  const articles: Article[] = rawArticles
+export function buildStoredEdition(rawArticles: NewsDataArticle[], dateKey: string): StoredEdition {
+  const articles: StoredArticle[] = rawArticles
     .filter((raw) => isAiRelevant(raw.title, raw.description))
     .slice(0, MAX_ARTICLES)
     .map((raw) => ({
@@ -39,12 +54,27 @@ export function buildTodayEdition(rawArticles: NewsDataArticle[], now: Date = ne
       headline: raw.title,
       summary: raw.description ?? "",
       source: raw.source_name,
-      timestamp: formatRelativeTime(raw.pubDate, now),
+      pubDate: raw.pubDate,
       url: raw.link,
     }));
 
+  return { dateKey, articles };
+}
+
+export function shouldPersistEdition(edition: StoredEdition): boolean {
+  return edition.articles.length > 0;
+}
+
+export function toDisplayEdition(stored: StoredEdition, now: Date = new Date()): Edition {
   return {
-    date: formatEditionDate(now),
-    articles,
+    date: formatEditionDateFromKey(stored.dateKey),
+    articles: stored.articles.map((article) => ({
+      category: article.category,
+      headline: article.headline,
+      summary: article.summary,
+      source: article.source,
+      timestamp: formatRelativeTime(article.pubDate, now),
+      url: article.url,
+    })),
   };
 }
