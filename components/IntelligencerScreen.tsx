@@ -11,6 +11,21 @@ import type { Edition } from "@/lib/editions";
 import type { CategoryFilter } from "@/lib/categories";
 import type { SwipeDirection } from "@/lib/swipe";
 
+// Page-load entrance: each section rises/fades in shortly after the one
+// before it, so the page reads as assembling itself in a considered order
+// rather than popping in all at once. Runs once per mount only — later
+// content changes (swipe, filter, date-nav) are handled by their own
+// transitions, not this one.
+const pageVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+};
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.23, 1, 0.32, 1] as const } },
+};
+
 export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
   const [dateIndex, setDateIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("ALL");
@@ -69,21 +84,30 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
   };
 
   return (
-    <main
+    <motion.main
+      initial="hidden"
+      animate="visible"
+      variants={pageVariants}
       className="mx-auto min-h-screen max-w-[560px] overflow-x-hidden"
       style={{ paddingTop: "var(--pad-screen-top)", paddingBottom: "var(--pad-screen-bottom)" }}
     >
-      <Header />
-      <EditionDateBar
-        date={edition.date}
-        onPrev={handlePrevDate}
-        onNext={handleNextDate}
-        prevDisabled={!canGoToOlderEdition(dateIndex, editions.length)}
-        nextDisabled={!canGoToNewerEdition(dateIndex)}
-      />
-      <FilterChips activeCategory={activeCategory} onSelect={handleSelectCategory} />
+      <motion.div variants={sectionVariants}>
+        <Header />
+      </motion.div>
+      <motion.div variants={sectionVariants}>
+        <EditionDateBar
+          date={edition.date}
+          onPrev={handlePrevDate}
+          onNext={handleNextDate}
+          prevDisabled={!canGoToOlderEdition(dateIndex, editions.length)}
+          nextDisabled={!canGoToNewerEdition(dateIndex)}
+        />
+      </motion.div>
+      <motion.div variants={sectionVariants}>
+        <FilterChips activeCategory={activeCategory} onSelect={handleSelectCategory} />
+      </motion.div>
       {activeArticle ? (
-        <motion.div style={{ height: stackHeight }} className="relative isolate grid px-6">
+        <motion.div variants={sectionVariants} style={{ height: stackHeight }} className="relative isolate grid px-6">
           {/* Two static rotated cards behind the main card, matching Figma's
               "Other" layers. Kept outside AnimatePresence: they're a stable
               backdrop for whichever card is on top, not tied to a specific
@@ -112,13 +136,19 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
           </AnimatePresence>
         </motion.div>
       ) : (
-        <p className="px-6 py-16 text-center text-body text-text-secondary">
+        <motion.p
+          variants={sectionVariants}
+          className="px-6 py-16 text-center text-body text-text-secondary"
+        >
           No stories in this category for this edition.
-        </p>
+        </motion.p>
       )}
-      <p className="pt-5 text-center text-micro tracking-[0.2px] text-text-muted">
+      <motion.p
+        variants={sectionVariants}
+        className="pt-5 text-center text-micro tracking-[0.2px] text-text-muted"
+      >
         swipe to read more stories
-      </p>
-    </main>
+      </motion.p>
+    </motion.main>
   );
 }
