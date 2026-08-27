@@ -3,7 +3,6 @@
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import {
   motion,
-  useIsPresent,
   useDragControls,
   useMotionValue,
   useTransform,
@@ -16,11 +15,8 @@ import type { Article } from "@/lib/article";
 
 export const CARD_RADIUS = "rounded-[26px_26px_34px_24px]";
 
-// How far a card travels on exit / starts from on entry. Deliberately less
-// than a card's own width so the outgoing and incoming cards visibly overlap
-// mid-transition — a genuine carousel-style pass rather than one fading out
-// of view before the other fades in from off-screen.
-const OFF_SCREEN_X = 140;
+// How far a card travels off-screen on exit / starts from on entry.
+const OFF_SCREEN_X = 380;
 // Degrees of rotation at the edge of the drag range, matching the old
 // dragX / 20 mapping (roughly ±15deg at a ~300px drag).
 const ROTATE_RANGE_DEG = 15;
@@ -29,13 +25,13 @@ const ROTATE_RANGE_PX = 300;
 const cardVariants = {
   enter: (direction: SwipeDirection | null) => ({
     x: direction === "next" ? OFF_SCREEN_X : direction === "prev" ? -OFF_SCREEN_X : 0,
-    opacity: direction === null ? 0 : 1,
+    opacity: 0,
     scale: 0.96,
   }),
   center: { x: 0, opacity: 1, scale: 1 },
   exit: (direction: SwipeDirection | null) => ({
     x: direction === "next" ? -OFF_SCREEN_X : direction === "prev" ? OFF_SCREEN_X : 0,
-    opacity: direction === null ? 0 : 1,
+    opacity: 0,
     scale: 0.96,
   }),
 };
@@ -66,13 +62,6 @@ export function StoryCard({
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-ROTATE_RANGE_PX, ROTATE_RANGE_PX], [-ROTATE_RANGE_DEG, ROTATE_RANGE_DEG]);
   const articleRef = useRef<HTMLElement>(null);
-  // While a card is exiting (isPresent === false), keep it above the
-  // incoming one — matches the Figma "stack of cards" motif: the top card
-  // visibly flies off, revealing the next one already in place beneath it.
-  // useIsPresent (not usePresence) is read-only: it doesn't take over
-  // responsibility for signaling AnimatePresence when the exit is done, so
-  // it can't accidentally leave an exiting card stuck mounted forever.
-  const isPresent = useIsPresent();
 
   // Report this card's real (border-box) height whenever it changes, so the
   // stack wrapper can animate to it explicitly — Motion's own `layout`
@@ -144,7 +133,7 @@ export function StoryCard({
         paddingTop: "var(--pad-card-top)",
         paddingBottom: "var(--pad-card-bottom)",
       }}
-      className={`relative ${isPresent ? "z-[2]" : "z-[3]"} col-start-1 row-start-1 flex cursor-grab select-none flex-col gap-6 self-start border-[0.8px] border-border-black bg-surface-card px-6 shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-text-accent ${CARD_RADIUS}`}
+      className={`relative z-[2] col-start-1 row-start-1 flex cursor-grab select-none flex-col gap-6 self-start border-[0.8px] border-border-black bg-surface-card px-6 shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-text-accent ${CARD_RADIUS}`}
     >
       <div className="flex items-center justify-between">
         <span className={`flex h-[27px] items-center rounded-md px-4 text-label-sm ${badgeClass}`}>
