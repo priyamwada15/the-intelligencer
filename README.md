@@ -1,8 +1,14 @@
 # The Intelligencer
 
-A considered daily briefing on AI news — a Next.js + Tailwind CSS static screen design, built as a portfolio project.
+A daily AI news briefing built as a single-card, swipe-through experience for mobile. You get one story at a time, filtered by category if you want, and the app never rewrites what a source wrote.
 
-This is Phase 1: a static scaffold. The masthead, date bar, category filter chips, and a single story card are all in place and pixel-matched to the Figma design, but nothing is interactive yet (no swipe, no working filters, no working date navigation). See `docs/decision-log.md` for the reasoning behind key decisions.
+I started this project from a Figma exploration comparing three different visual directions before settling on the one here, which I called Canopy Editorial in my own notes. From there I built it in phases on purpose: a static scaffold first, then the swipe and filter interactions against placeholder content, then the real news pipeline last. Each phase has its own plan document, and the reasoning behind the choices lives in `docs/decision-log.md`, which tracks the real thinking better than this file does.
+
+The news comes from NewsData.io, sorted into categories by a keyword-matching rule instead of an LLM call, mostly for cost and predictability. A scheduled job refreshes the current day's edition three times daily and builds up a rolling week of real history once it has been running long enough. None of that live behavior turns on by accident though: a `NEWS_LIVE_MODE` flag has to be set to true explicitly, so holding an API key locally never changes what you see while developing.
+
+The swipe got rebuilt entirely partway through. The first version was a hand-rolled pointer drag that snapped back or swapped content instantly, with no real motion to it. It runs on Motion now, with the outgoing card continuing off screen while the next one slides in, though I reverted one version of that transition after seeing it live and deciding the earlier, plainer one looked better.
+
+This is still local-only. It hasn't been deployed anywhere yet, and `NEWS_LIVE_MODE` stays off until the design and interactions feel finished.
 
 ## Getting started
 
