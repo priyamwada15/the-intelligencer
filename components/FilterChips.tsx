@@ -26,12 +26,17 @@ function Chip({
   const { chipClass } = getCategoryStyle(categoryId, isActive);
 
   return (
-    <motion.button
-      layout
+    // A plain button, not motion.button with `layout` — reordering the
+    // whole chip list (which only happens when switching dates, since sort
+    // order depends on that edition's articles) looked chaotic animated,
+    // several chips all sliding past each other at once. The new order
+    // should just appear, the way the rest of the page's content does when
+    // an edition changes. The pill's own layoutId slide (for switching
+    // filters within one edition, where nothing reorders) is unaffected.
+    <button
       type="button"
       aria-pressed={isActive}
       onClick={onClick}
-      transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
       className={`relative flex h-[30px] shrink-0 items-center rounded-md text-label transition-colors duration-200 ${chipClass} ${paddingClassName}`}
     >
       {isActive && (
@@ -42,7 +47,7 @@ function Chip({
         />
       )}
       <span className="relative z-10">{label}</span>
-    </motion.button>
+    </button>
   );
 }
 
