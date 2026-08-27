@@ -1,5 +1,7 @@
 # The Intelligencer
 
+Live at [the-intelligencer.vercel.app](https://the-intelligencer.vercel.app).
+
 A daily AI news briefing built as a single-card, swipe-through experience for mobile. You get one story at a time, filtered by category if you want, and the app never rewrites what a source wrote.
 
 I started this project from a Figma exploration comparing three different visual directions before settling on the one here, which I called Canopy Editorial in my own notes. From there I built it in phases on purpose: a static scaffold first, then the swipe and filter interactions against placeholder content, then the real news pipeline last. Each phase has its own plan document, and the reasoning behind the choices lives in `docs/decision-log.md`, which tracks the real thinking better than this file does.
@@ -8,7 +10,7 @@ The news comes from NewsData.io, sorted into categories by a keyword-matching ru
 
 The swipe got rebuilt entirely partway through. The first version was a hand-rolled pointer drag that snapped back or swapped content instantly, with no real motion to it. It runs on Motion now, with the outgoing card continuing off screen while the next one slides in, though I reverted one version of that transition after seeing it live and deciding the earlier, plainer one looked better.
 
-This is still local-only. It hasn't been deployed anywhere yet, and `NEWS_LIVE_MODE` stays off until the design and interactions feel finished.
+It's deployed on Vercel now, with `NEWS_LIVE_MODE` on, so the live version pulls real news instead of the earlier placeholder set. The scheduled refresh runs three times a day through a GitHub Actions workflow, since Vercel's own free cron tier only fires once daily and I wanted the real schedule.
 
 ## Getting started
 
