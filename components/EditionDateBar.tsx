@@ -138,7 +138,7 @@ export function EditionDateBar({
                   x: "-50%",
                   transformOrigin: "top center",
                 }}
-                className="z-50 w-max min-w-[200px] overflow-hidden rounded-[16px] bg-surface-card py-1 shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)]"
+                className="z-50 w-max min-w-[200px] overflow-hidden rounded-[16px] bg-surface-card shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)]"
               >
                 {dateOptions.map((option, index) => (
                   <button
