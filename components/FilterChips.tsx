@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { CATEGORIES, getCategoryStyle, type CategoryFilter } from "@/lib/categories";
+import { getCategoryStyle, type Category, type CategoryFilter } from "@/lib/categories";
 
 // A shared layoutId across every chip's pill: only the active chip ever
 // renders one, so Motion sees it move from wherever it used to be to its
@@ -26,10 +26,12 @@ function Chip({
   const { chipClass } = getCategoryStyle(categoryId, isActive);
 
   return (
-    <button
+    <motion.button
+      layout
       type="button"
       aria-pressed={isActive}
       onClick={onClick}
+      transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
       className={`relative flex h-[30px] shrink-0 items-center rounded-md text-label transition-colors duration-200 ${chipClass} ${paddingClassName}`}
     >
       {isActive && (
@@ -40,14 +42,16 @@ function Chip({
         />
       )}
       <span className="relative z-10">{label}</span>
-    </button>
+    </motion.button>
   );
 }
 
 export function FilterChips({
+  categories,
   activeCategory,
   onSelect,
 }: {
+  categories: Category[];
   activeCategory: CategoryFilter;
   onSelect: (category: CategoryFilter) => void;
 }) {
@@ -64,7 +68,7 @@ export function FilterChips({
         onClick={() => onSelect("ALL")}
         paddingClassName="px-4"
       />
-      {CATEGORIES.map((category) => (
+      {categories.map((category) => (
         <Chip
           key={category.id}
           categoryId={category.id}

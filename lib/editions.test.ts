@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { EDITIONS, filterArticles, clampIndex, canGoToOlderEdition, canGoToNewerEdition } from "./editions";
+import {
+  EDITIONS,
+  filterArticles,
+  clampIndex,
+  canGoToOlderEdition,
+  canGoToNewerEdition,
+  sortCategoriesByAvailability,
+} from "./editions";
+import type { Article } from "./article";
 
 describe("EDITIONS", () => {
   it("has three editions in newest-first order", () => {
@@ -86,5 +94,56 @@ describe("canGoToNewerEdition", () => {
 
   it("returns false at the newest edition (index 0)", () => {
     expect(canGoToNewerEdition(0)).toBe(false);
+  });
+});
+
+describe("sortCategoriesByAvailability", () => {
+  function makeArticle(category: Article["category"]): Article {
+    return {
+      category,
+      headline: "headline",
+      summary: "summary",
+      source: "source",
+      timestamp: "just now",
+      url: `https://example.com/${category}`,
+    };
+  }
+
+  const categories = [
+    { id: "MODELS" as const, label: "Models" },
+    { id: "PRODUCTS" as const, label: "Products" },
+    { id: "FUNDING" as const, label: "Funding" },
+    { id: "INDUSTRY" as const, label: "Industry" },
+  ];
+
+  it("puts categories with at least one article first, in their original relative order", () => {
+    const articles = [makeArticle("FUNDING"), makeArticle("MODELS")];
+    const result = sortCategoriesByAvailability(categories, articles);
+    expect(result.map((c) => c.id)).toEqual(["MODELS", "FUNDING", "PRODUCTS", "INDUSTRY"]);
+  });
+
+  it("keeps categories with no articles at the end, in their original relative order", () => {
+    const articles = [makeArticle("INDUSTRY")];
+    const result = sortCategoriesByAvailability(categories, articles);
+    expect(result.map((c) => c.id)).toEqual(["INDUSTRY", "MODELS", "PRODUCTS", "FUNDING"]);
+  });
+
+  it("leaves order unchanged when every category has articles", () => {
+    const articles = categories.map((c) => makeArticle(c.id));
+    expect(sortCategoriesByAvailability(categories, articles).map((c) => c.id)).toEqual(
+      categories.map((c) => c.id),
+    );
+  });
+
+  it("leaves order unchanged when no category has articles", () => {
+    expect(sortCategoriesByAvailability(categories, []).map((c) => c.id)).toEqual(
+      categories.map((c) => c.id),
+    );
+  });
+
+  it("does not mutate the input array", () => {
+    const original = [...categories];
+    sortCategoriesByAvailability(categories, [makeArticle("INDUSTRY")]);
+    expect(categories).toEqual(original);
   });
 });

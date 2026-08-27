@@ -6,8 +6,15 @@ import { Header } from "./Header";
 import { EditionDateBar } from "./EditionDateBar";
 import { FilterChips } from "./FilterChips";
 import { StoryCard, CARD_RADIUS } from "./StoryCard";
-import { filterArticles, clampIndex, canGoToOlderEdition, canGoToNewerEdition } from "@/lib/editions";
+import {
+  filterArticles,
+  clampIndex,
+  canGoToOlderEdition,
+  canGoToNewerEdition,
+  sortCategoriesByAvailability,
+} from "@/lib/editions";
 import type { Edition } from "@/lib/editions";
+import { CATEGORIES } from "@/lib/categories";
 import type { CategoryFilter } from "@/lib/categories";
 import type { SwipeDirection } from "@/lib/swipe";
 
@@ -57,9 +64,20 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
   const articles = filterArticles(edition, activeCategory);
   const safeIndex = clampIndex(cardIndex, articles.length);
   const activeArticle = articles[safeIndex];
+  // Categories with a story in this edition sort first; empty ones sink to
+  // the end instead of sitting ahead of categories that actually have
+  // something to show.
+  const sortedCategories = sortCategoriesByAvailability(CATEGORIES, edition.articles);
 
   const handleSelectCategory = (category: CategoryFilter) => {
     setActiveCategory(category);
+    setCardIndex(0);
+    setSwipeDirection(null);
+  };
+
+  const handleSelectDate = (index: number) => {
+    setDateIndex(index);
+    setActiveCategory("ALL");
     setCardIndex(0);
     setSwipeDirection(null);
   };
@@ -103,6 +121,9 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
       <motion.div variants={sectionVariants}>
         <EditionDateBar
           date={edition.date}
+          dateOptions={editions.map((e) => e.date)}
+          activeDateIndex={dateIndex}
+          onSelectDate={handleSelectDate}
           onPrev={handlePrevDate}
           onNext={handleNextDate}
           prevDisabled={!canGoToOlderEdition(dateIndex, editions.length)}
@@ -110,7 +131,11 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
         />
       </motion.div>
       <motion.div variants={sectionVariants}>
-        <FilterChips activeCategory={activeCategory} onSelect={handleSelectCategory} />
+        <FilterChips
+          categories={sortedCategories}
+          activeCategory={activeCategory}
+          onSelect={handleSelectCategory}
+        />
       </motion.div>
       {activeArticle ? (
         <motion.div variants={sectionVariants} style={{ height: stackHeight }} className="relative isolate grid px-6">

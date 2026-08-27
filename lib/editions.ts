@@ -1,5 +1,5 @@
 import type { Article } from "@/lib/article";
-import type { CategoryFilter } from "@/lib/categories";
+import type { CategoryFilter, CategoryId } from "@/lib/categories";
 
 export type Edition = {
   date: string;
@@ -104,4 +104,19 @@ export function canGoToOlderEdition(dateIndex: number, editionsLength: number): 
 
 export function canGoToNewerEdition(dateIndex: number): boolean {
   return dateIndex > 0;
+}
+
+// Categories with at least one article in this edition sort first (in their
+// existing relative order); categories with none sort to the end (also in
+// their existing relative order) instead of sitting first with an empty
+// filter result. Generic over T so the real Category objects (id + label)
+// pass straight through untouched.
+export function sortCategoriesByAvailability<T extends { id: CategoryId }>(
+  categories: T[],
+  articles: Article[],
+): T[] {
+  const availableIds = new Set(articles.map((article) => article.category));
+  const withArticles = categories.filter((category) => availableIds.has(category.id));
+  const withoutArticles = categories.filter((category) => !availableIds.has(category.id));
+  return [...withArticles, ...withoutArticles];
 }
