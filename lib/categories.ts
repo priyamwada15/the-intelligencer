@@ -26,9 +26,11 @@ export function getCategoryStyle(
   categoryId: CategoryFilter,
   isActive: boolean,
 ): { chipClass: string; badgeClass: string } {
-  const chipClass = isActive
-    ? "bg-accent text-text-primary"
-    : "bg-transparent text-text-secondary";
+  // The chip's background fill is a separate animated pill layered behind
+  // the label (see FilterChips.tsx), so it can slide smoothly between
+  // chips instead of each one's own fill instantly swapping. This only
+  // carries the label's text color.
+  const chipClass = isActive ? "text-text-primary" : "text-text-secondary";
 
   // The in-card category badge (e.g. the "Models" pill inside the story
   // card itself) is always filled — only the filter-row chips distinguish

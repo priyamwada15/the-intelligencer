@@ -88,7 +88,13 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
       initial="hidden"
       animate="visible"
       variants={pageVariants}
-      className="mx-auto min-h-screen max-w-[560px] overflow-x-hidden"
+      // min-h-dvh (not min-h-screen/100vh) so the page matches the actual
+      // visible viewport on mobile, not the tallest-possible one — 100vh
+      // otherwise leaves a phantom scroll gap under a mobile browser's
+      // collapsible address bar even when no content is being clipped.
+      // min-height (not height) still lets the page grow and scroll on the
+      // rare edition where content genuinely exceeds the viewport.
+      className="mx-auto min-h-dvh max-w-[560px] overflow-x-hidden"
       style={{ paddingTop: "var(--pad-screen-top)", paddingBottom: "var(--pad-screen-bottom)" }}
     >
       <motion.div variants={sectionVariants}>

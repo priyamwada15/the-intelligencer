@@ -1,4 +1,48 @@
+"use client";
+
+import { motion } from "motion/react";
 import { CATEGORIES, getCategoryStyle, type CategoryFilter } from "@/lib/categories";
+
+// A shared layoutId across every chip's pill: only the active chip ever
+// renders one, so Motion sees it move from wherever it used to be to its
+// new chip and animates that position/size change smoothly — the sliding
+// highlight effect, rather than each chip fading its own fill in and out
+// independently.
+const PILL_LAYOUT_ID = "active-filter-pill";
+
+function Chip({
+  categoryId,
+  label,
+  isActive,
+  onClick,
+  paddingClassName,
+}: {
+  categoryId: CategoryFilter;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+  paddingClassName: string;
+}) {
+  const { chipClass } = getCategoryStyle(categoryId, isActive);
+
+  return (
+    <button
+      type="button"
+      aria-pressed={isActive}
+      onClick={onClick}
+      className={`relative flex h-[30px] shrink-0 items-center rounded-md text-label transition-colors duration-200 ${chipClass} ${paddingClassName}`}
+    >
+      {isActive && (
+        <motion.span
+          layoutId={PILL_LAYOUT_ID}
+          className="absolute inset-0 z-0 rounded-md bg-accent"
+          transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
+        />
+      )}
+      <span className="relative z-10">{label}</span>
+    </button>
+  );
+}
 
 export function FilterChips({
   activeCategory,
@@ -7,37 +51,29 @@ export function FilterChips({
   activeCategory: CategoryFilter;
   onSelect: (category: CategoryFilter) => void;
 }) {
-  const { chipClass: allChipClass } = getCategoryStyle("ALL", activeCategory === "ALL");
-
   return (
     <nav
       aria-label="Filter stories by category"
       className="scrollbar-hide flex gap-2 overflow-x-auto px-6"
       style={{ paddingTop: "var(--pad-filters-top)", paddingBottom: "var(--pad-filters-bottom)" }}
     >
-      <button
-        type="button"
-        aria-pressed={activeCategory === "ALL"}
+      <Chip
+        categoryId="ALL"
+        label="All"
+        isActive={activeCategory === "ALL"}
         onClick={() => onSelect("ALL")}
-        className={`flex h-[30px] shrink-0 items-center rounded-md px-4 text-label ${allChipClass}`}
-      >
-        All
-      </button>
-      {CATEGORIES.map((category) => {
-        const isActive = activeCategory === category.id;
-        const { chipClass } = getCategoryStyle(category.id, isActive);
-        return (
-          <button
-            key={category.id}
-            type="button"
-            aria-pressed={isActive}
-            onClick={() => onSelect(category.id)}
-            className={`flex h-[30px] shrink-0 items-center rounded-md px-3 text-label ${chipClass}`}
-          >
-            {category.label}
-          </button>
-        );
-      })}
+        paddingClassName="px-4"
+      />
+      {CATEGORIES.map((category) => (
+        <Chip
+          key={category.id}
+          categoryId={category.id}
+          label={category.label}
+          isActive={activeCategory === category.id}
+          onClick={() => onSelect(category.id)}
+          paddingClassName="px-3"
+        />
+      ))}
     </nav>
   );
 }
