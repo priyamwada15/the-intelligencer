@@ -5,6 +5,19 @@ import type { CategoryId } from "@/lib/categories";
 import type { Edition } from "@/lib/editions";
 
 const MAX_ARTICLES = 6;
+// NewsData.io's `description` field is sometimes a short teaser and
+// sometimes the entire article body (observed directly: a press release
+// came through in full, thousands of characters). Cap it to roughly a
+// 2-3 sentence excerpt regardless of what the source sends.
+const MAX_SUMMARY_LENGTH = 280;
+
+export function truncateSummary(text: string, maxLength: number = MAX_SUMMARY_LENGTH): string {
+  if (text.length <= maxLength) return text;
+  const truncated = text.slice(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(" ");
+  const cut = lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated;
+  return `${cut.trimEnd()}…`;
+}
 
 export type StoredArticle = {
   category: CategoryId;
@@ -52,7 +65,7 @@ export function buildStoredEdition(rawArticles: NewsDataArticle[], dateKey: stri
     .map((raw) => ({
       category: categorizeArticle(raw.title, raw.description),
       headline: raw.title,
-      summary: raw.description ?? "",
+      summary: raw.description ? truncateSummary(raw.description) : "",
       source: raw.source_name,
       pubDate: raw.pubDate,
       url: raw.link,

@@ -5,6 +5,7 @@ import {
   buildStoredEdition,
   shouldPersistEdition,
   toDisplayEdition,
+  truncateSummary,
 } from "./buildEdition";
 import type { NewsDataArticle } from "./newsdata";
 
@@ -39,6 +40,32 @@ describe("formatEditionDateFromKey", () => {
 
   it("matches the placeholder editions' date format shape", () => {
     expect(formatEditionDateFromKey("2026-01-05")).toMatch(/^[A-Z][a-z]+, [A-Z][a-z]+ \d{1,2}$/);
+  });
+});
+
+describe("truncateSummary", () => {
+  it("leaves text at or under the max length unchanged", () => {
+    expect(truncateSummary("Short summary.", 280)).toBe("Short summary.");
+  });
+
+  it("truncates text over the max length at a word boundary, with an ellipsis", () => {
+    const long = "word ".repeat(100).trim(); // 100 words, well over 280 chars
+    const result = truncateSummary(long, 280);
+    expect(result.length).toBeLessThanOrEqual(281); // 280 + the ellipsis char
+    expect(result.endsWith("…")).toBe(true);
+    expect(result.endsWith(" …")).toBe(false); // no trailing space before the ellipsis
+  });
+
+  it("never cuts a word in half", () => {
+    const text = "a".repeat(275) + " nextword " + "b".repeat(50);
+    const result = truncateSummary(text, 280);
+    // The cut should land at the space, not mid-"nextword"
+    expect(result).toBe(`${"a".repeat(275)}…`);
+  });
+
+  it("defaults to the module's own max length when none is given", () => {
+    const long = "x".repeat(500);
+    expect(truncateSummary(long).length).toBeLessThanOrEqual(281);
   });
 });
 
