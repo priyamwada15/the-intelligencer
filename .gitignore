@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local-only microfrontends config for `next dev` (see VC_MICROFRONTENDS_CONFIG)
+microfrontends.local.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
