@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "vercel microfrontends pull && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"
