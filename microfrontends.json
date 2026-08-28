@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "version": "1",
+  "applications": {
+    "new-portfolio-2026": {
+      "packageName": "portfolio",
+      "development": {
+        "fallback": "https://priyamwada.me"
+      }
+    },
+    "the-intelligencer": {
+      "packageName": "intelligencer",
+      "routing": [
+        {
+          "paths": ["/the-intelligencer/:path*"]
+        }
+      ],
+      "development": {
+        "fallback": "https://the-intelligencer.vercel.app"
+      }
+    }
+  }
+}
