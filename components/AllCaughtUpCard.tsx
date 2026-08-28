@@ -25,7 +25,7 @@ export function AllCaughtUpCard({
       onHeightChange={onHeightChange}
       className={`relative z-[2] col-start-1 row-start-1 flex min-h-[200px] cursor-grab select-none items-center justify-center self-start border-[0.8px] border-border-black bg-accent px-6 text-center shadow-[0px_12px_30px_rgba(38,58,47,0.09),0px_2px_4px_rgba(38,58,47,0.05)] outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-text-accent ${CARD_RADIUS}`}
     >
-      <p className="text-heading font-bold text-text-primary">Go touch some grass now.</p>
+      <p className="text-heading font-bold text-text-primary">You&apos;re all caught up, go touch some grass now.</p>
     </SwipeableCard>
   );
 }
