@@ -5,7 +5,10 @@ import { AnimatePresence, animate, motion, useMotionValue } from "motion/react";
 import { Header } from "./Header";
 import { EditionDateBar } from "./EditionDateBar";
 import { FilterChips } from "./FilterChips";
-import { StoryCard, CARD_RADIUS } from "./StoryCard";
+import { StoryCard } from "./StoryCard";
+import { AllCaughtUpCard } from "./AllCaughtUpCard";
+import { IllustratedState } from "./IllustratedState";
+import { CARD_RADIUS } from "./SwipeableCard";
 import {
   filterArticles,
   clampIndex,
@@ -62,8 +65,14 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
 
   const edition = editions[dateIndex];
   const articles = filterArticles(edition, activeCategory);
-  const safeIndex = clampIndex(cardIndex, articles.length);
-  const activeArticle = articles[safeIndex];
+  const hasArticles = articles.length > 0;
+  // One extra slot past the last real article (clampIndex's upper bound is
+  // exclusive, so passing articles.length + 1 allows the index to reach
+  // exactly articles.length) — that slot is the "all caught up" end card,
+  // not a real article.
+  const safeIndex = hasArticles ? clampIndex(cardIndex, articles.length + 1) : 0;
+  const isAtEnd = hasArticles && safeIndex === articles.length;
+  const activeArticle = hasArticles && !isAtEnd ? articles[safeIndex] : undefined;
   // Categories with a story in this edition sort first; empty ones sink to
   // the end instead of sitting ahead of categories that actually have
   // something to show.
@@ -98,7 +107,17 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
 
   const handleSwipe = (direction: SwipeDirection) => {
     setSwipeDirection(direction);
-    setCardIndex(clampIndex(direction === "next" ? safeIndex + 1 : safeIndex - 1, articles.length));
+    // Functional update, not a value computed from the `safeIndex` closure:
+    // during the drag/exit overlap, both the outgoing and incoming card
+    // instances are mounted, each with an onSwipe closure from its own
+    // render. If a swipe lands on the about-to-unmount one, a
+    // closure-captured safeIndex would be stale and could silently no-op
+    // or miscompute. Reading the true latest cardIndex here avoids that
+    // regardless of which instance the event actually fired on.
+    setCardIndex((current) => {
+      const currentSafe = clampIndex(current, articles.length + 1);
+      return clampIndex(direction === "next" ? currentSafe + 1 : currentSafe - 1, articles.length + 1);
+    });
   };
 
   return (
@@ -137,7 +156,7 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
           onSelect={handleSelectCategory}
         />
       </motion.div>
-      {activeArticle ? (
+      {hasArticles ? (
         <motion.div variants={sectionVariants} style={{ height: stackHeight }} className="relative isolate grid px-6">
           {/* Two static rotated cards behind the main card, matching Figma's
               "Other" layers. Kept outside AnimatePresence: they're a stable
@@ -155,31 +174,39 @@ export function IntelligencerScreen({ editions }: { editions: Edition[] }) {
             className={`absolute inset-x-6 inset-y-0 -rotate-[4.5deg] border-[0.8px] border-border-subtle bg-accent ${CARD_RADIUS}`}
           />
           <AnimatePresence mode="popLayout" initial={false} custom={swipeDirection}>
-            <StoryCard
-              key={activeArticle.url}
-              article={activeArticle}
-              index={safeIndex}
-              total={articles.length}
-              direction={swipeDirection}
-              onSwipe={handleSwipe}
-              onHeightChange={handleHeightChange}
-            />
+            {isAtEnd ? (
+              <AllCaughtUpCard
+                key="all-caught-up"
+                direction={swipeDirection}
+                onSwipe={handleSwipe}
+                onHeightChange={handleHeightChange}
+              />
+            ) : (
+              <StoryCard
+                key={activeArticle!.url}
+                article={activeArticle!}
+                index={safeIndex}
+                total={articles.length}
+                direction={swipeDirection}
+                onSwipe={handleSwipe}
+                onHeightChange={handleHeightChange}
+              />
+            )}
           </AnimatePresence>
         </motion.div>
       ) : (
+        <motion.div variants={sectionVariants}>
+          <IllustratedState message="Quiet corner of the forest today." />
+        </motion.div>
+      )}
+      {hasArticles && !isAtEnd && (
         <motion.p
           variants={sectionVariants}
-          className="px-6 py-16 text-center text-body text-text-secondary"
+          className="pt-5 text-center text-micro tracking-[0.2px] text-text-muted"
         >
-          No stories in this category for this edition.
+          swipe to read more stories
         </motion.p>
       )}
-      <motion.p
-        variants={sectionVariants}
-        className="pt-5 text-center text-micro tracking-[0.2px] text-text-muted"
-      >
-        swipe to read more stories
-      </motion.p>
     </motion.main>
   );
 }
