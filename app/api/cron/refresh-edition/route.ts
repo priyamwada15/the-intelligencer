@@ -1,5 +1,6 @@
 import { fetchTechNews } from "@/lib/newsdata";
 import { buildStoredEdition, shouldPersistEdition } from "@/lib/buildEdition";
+import { applyAiSummaries } from "@/lib/summarize";
 import {
   getEasternDateKey,
   getEasternHour,
@@ -38,10 +39,15 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ ok: true, dateKey, articleCount: 0, persisted: false });
     }
 
-    await writeEdition(edition, blobToken);
+    // Optional enhancement, not a requirement: without a key, editions still
+    // persist with the truncated raw-description summary (see buildEdition.ts).
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const finalEdition = geminiApiKey ? await applyAiSummaries(edition, geminiApiKey) : edition;
+
+    await writeEdition(finalEdition, blobToken);
     await pruneOldEditions(blobToken);
 
-    return Response.json({ ok: true, dateKey, articleCount: edition.articles.length, persisted: true });
+    return Response.json({ ok: true, dateKey, articleCount: finalEdition.articles.length, persisted: true });
   } catch (error) {
     console.error("refresh-edition failed:", error);
     return new Response("Internal error", { status: 500 });
