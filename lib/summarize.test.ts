@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { summarizeArticle, applyAiSummaries } from "./summarize";
+import { summarizeEdition, applyAiSummaries } from "./summarize";
 import type { StoredEdition } from "./buildEdition";
 
 function mockFetchOnce(response: Partial<Response> & { json?: () => Promise<unknown> }) {
@@ -13,36 +13,69 @@ function mockFetchOnce(response: Partial<Response> & { json?: () => Promise<unkn
   );
 }
 
+function jsonArrayResponse(summaries: string[]) {
+  return {
+    json: async () => ({
+      candidates: [{ content: { parts: [{ text: JSON.stringify(summaries) }] } }],
+    }),
+  };
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("summarizeArticle", () => {
-  it("returns the trimmed summary text from a successful response", async () => {
-    mockFetchOnce({
+describe("summarizeEdition", () => {
+  const articles = [
+    { title: "OpenAI announces new model", description: "A description mentioning AI." },
+    { title: "Logistics company lays off 200 workers", description: "A layoffs story." },
+    { title: "Startup raises Series A", description: "A funding story." },
+  ];
+
+  it("returns the parsed array of trimmed summaries, in order", async () => {
+    mockFetchOnce(jsonArrayResponse(["  First summary.  ", "Second summary.", "Third summary."]));
+
+    const result = await summarizeEdition(articles, "fake-key");
+    expect(result).toEqual(["First summary.", "Second summary.", "Third summary."]);
+  });
+
+  it("sends exactly one fetch request no matter how many articles are given", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
       json: async () => ({
-        candidates: [{ content: { parts: [{ text: "  A tidy two-sentence summary.  " }] } }],
+        candidates: [{ content: { parts: [{ text: JSON.stringify(["A.", "B.", "C."]) }] } }],
       }),
     });
+    vi.stubGlobal("fetch", fetchMock);
 
-    const result = await summarizeArticle({ title: "Title", description: "Description" }, "fake-key");
-    expect(result).toBe("A tidy two-sentence summary.");
+    await summarizeEdition(articles, "fake-key");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("throws when the response is not ok", async () => {
     mockFetchOnce({ ok: false, status: 429, text: async () => "rate limited" });
 
-    await expect(summarizeArticle({ title: "Title", description: "Description" }, "fake-key")).rejects.toThrow(
-      /Gemini request failed/,
-    );
+    await expect(summarizeEdition(articles, "fake-key")).rejects.toThrow(/Gemini request failed/);
   });
 
   it("throws when the response has no candidate text", async () => {
     mockFetchOnce({ json: async () => ({ candidates: [] }) });
 
-    await expect(summarizeArticle({ title: "Title", description: "Description" }, "fake-key")).rejects.toThrow(
-      /no summary text/,
-    );
+    await expect(summarizeEdition(articles, "fake-key")).rejects.toThrow(/no summary text/);
+  });
+
+  it("throws when the response text is not valid JSON", async () => {
+    mockFetchOnce({
+      json: async () => ({ candidates: [{ content: { parts: [{ text: "not json" }] } }] }),
+    });
+
+    await expect(summarizeEdition(articles, "fake-key")).rejects.toThrow(/not valid JSON/);
+  });
+
+  it("throws when the parsed array length doesn't match the number of articles", async () => {
+    mockFetchOnce(jsonArrayResponse(["Only one summary."]));
+
+    await expect(summarizeEdition(articles, "fake-key")).rejects.toThrow(/exactly 3/);
   });
 });
 
@@ -53,7 +86,7 @@ describe("applyAiSummaries", () => {
       {
         category: "MODELS",
         headline: "OpenAI announces new model",
-        summary: "The old truncated fallback summary.",
+        summary: "The old truncated fallback summary A.",
         source: "Example News",
         pubDate: "2026-08-26 11:00:00",
         url: "https://example.com/a",
@@ -61,7 +94,7 @@ describe("applyAiSummaries", () => {
       {
         category: "INDUSTRY",
         headline: "Logistics company lays off 200 workers",
-        summary: "The old truncated fallback summary.",
+        summary: "The old truncated fallback summary B.",
         source: "Example News",
         pubDate: "2026-08-26 11:00:00",
         url: "https://example.com/b",
@@ -69,53 +102,39 @@ describe("applyAiSummaries", () => {
     ],
   };
 
-  it("replaces an article's summary with the AI-generated one on success", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ candidates: [{ content: { parts: [{ text: "AI-written summary." }] } }] }),
-      }),
-    );
+  it("replaces every article's summary with its corresponding AI summary, in order, on success", async () => {
+    mockFetchOnce(jsonArrayResponse(["AI summary for A.", "AI summary for B."]));
 
     const result = await applyAiSummaries(edition, "fake-key");
-    expect(result.articles[0].summary).toBe("AI-written summary.");
-    expect(result.articles[1].summary).toBe("AI-written summary.");
+    expect(result.articles[0].summary).toBe("AI summary for A.");
+    expect(result.articles[1].summary).toBe("AI summary for B.");
   });
 
-  it("keeps the original summary for an article whose AI call fails, without affecting the others", async () => {
-    let callCount = 0;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockImplementation(async () => {
-        callCount += 1;
-        if (callCount === 1) {
-          throw new Error("network error");
-        }
-        return {
-          ok: true,
-          json: async () => ({ candidates: [{ content: { parts: [{ text: "Second article's AI summary." }] } }] }),
-        };
-      }),
-    );
+  it("keeps every article's original fallback summary when the batch call fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
 
     const result = await applyAiSummaries(edition, "fake-key");
-    const failed = result.articles.find((a) => a.url === "https://example.com/a");
-    const succeeded = result.articles.find((a) => a.url === "https://example.com/b");
-    expect(failed?.summary).toBe("The old truncated fallback summary.");
-    expect(succeeded?.summary).toBe("Second article's AI summary.");
+    expect(result.articles[0].summary).toBe("The old truncated fallback summary A.");
+    expect(result.articles[1].summary).toBe("The old truncated fallback summary B.");
+  });
+
+  it("sends only one fetch request for an edition with multiple articles", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify(["A.", "B."]) }] } }],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await applyAiSummaries(edition, "fake-key");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("does not mutate the input edition", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ candidates: [{ content: { parts: [{ text: "AI summary." }] } }] }),
-      }),
-    );
+    mockFetchOnce(jsonArrayResponse(["AI summary A.", "AI summary B."]));
 
     await applyAiSummaries(edition, "fake-key");
-    expect(edition.articles[0].summary).toBe("The old truncated fallback summary.");
+    expect(edition.articles[0].summary).toBe("The old truncated fallback summary A.");
   });
 });

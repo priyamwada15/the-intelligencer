@@ -8,8 +8,10 @@ const MAX_ARTICLES = 6;
 // NewsData.io's `description` field is sometimes a short teaser and
 // sometimes the entire article body (observed directly: a press release
 // came through in full, thousands of characters). Cap it to roughly a
-// 2-3 sentence excerpt regardless of what the source sends.
-const MAX_SUMMARY_LENGTH = 280;
+// 4-sentence excerpt regardless of what the source sends. Matches the
+// AI summary's own target length (see summarize.ts's STYLE_GUIDE) so a
+// raw-description fallback card reads the same length as an AI one.
+const MAX_SUMMARY_LENGTH = 480;
 
 export function truncateSummary(text: string, maxLength: number = MAX_SUMMARY_LENGTH): string {
   if (text.length <= maxLength) return text;

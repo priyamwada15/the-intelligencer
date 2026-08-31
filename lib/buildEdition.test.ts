@@ -64,8 +64,10 @@ describe("truncateSummary", () => {
   });
 
   it("defaults to the module's own max length when none is given", () => {
-    const long = "x".repeat(500);
-    expect(truncateSummary(long).length).toBeLessThanOrEqual(281);
+    const long = "x".repeat(700);
+    const result = truncateSummary(long);
+    expect(result.length).toBeGreaterThan(281); // proves the default is longer than the old 280-char cap
+    expect(result.length).toBeLessThanOrEqual(481);
   });
 });
 

@@ -13,10 +13,10 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
 // language uniformly by category (a layoffs story can land in the same
 // "INDUSTRY" bucket as a cheerful adoption story — the tone call has to be
 // content-based, not category-based).
-const STYLE_GUIDE = `You are writing a short summary for an AI news briefing app called The Intelligencer, styled around a solarpunk theme (nature reclaiming technology, hopeful and grounded).
+const STYLE_GUIDE = `You are writing short summaries for an AI news briefing app called The Intelligencer, styled around a solarpunk theme (nature reclaiming technology, hopeful and grounded).
 
 Rules:
-- Write exactly 2 sentences, plain English, under 220 characters total.
+- Write exactly 4 sentences per summary, plain English, under 480 characters total.
 - Use ONLY facts present in the title and description below. Never add outside claims, context, speculation, or opinion not present in the source.
 - Voice: light, warm, occasionally playful word choice (e.g. "rolled out", "unveiled", "took root") — but do not force a metaphor into every sentence, and do not use exclamation points.
 - Exception: if the story involves layoffs, deaths, injuries, lawsuits, harm, security incidents, or other serious/grim outcomes, drop all playful language and write in a plain, neutral, respectful tone instead.
@@ -35,18 +35,60 @@ Additional voice rules:
   genuinely, really, truly, actually.
 - Prefer verbs over their noun forms ("decide" not "make a decision," "launch" not "conduct a launch").`;
 
-export async function summarizeArticle(
-  article: { title: string; description: string | null },
-  apiKey: string,
-): Promise<string> {
-  const prompt = `${STYLE_GUIDE}\n\nTitle: ${article.title}\nDescription: ${article.description ?? "(none provided)"}`;
+export type SummarizableArticle = { title: string; description: string | null };
+
+function buildBatchPrompt(articles: SummarizableArticle[]): string {
+  const articlesBlock = articles
+    .map(
+      (article, index) =>
+        `${index + 1}. Title: ${article.title}\n   Description: ${article.description ?? "(none provided)"}`,
+    )
+    .join("\n\n");
+
+  return `${STYLE_GUIDE}
+
+You will summarize ${articles.length} articles below. Write one summary per article, using ONLY facts from that specific article's own title/description — never mix facts between articles.
+
+Return ONLY a JSON array of exactly ${articles.length} strings, one summary per article, in the same order as listed below. No markdown code fences, no numbering, no other text.
+
+Articles:
+${articlesBlock}`;
+}
+
+function parseBatchSummaries(text: string, expectedCount: number): string[] {
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error("Gemini batch response was not valid JSON");
+  }
+
+  if (!Array.isArray(parsed) || parsed.length !== expectedCount || !parsed.every((s) => typeof s === "string")) {
+    throw new Error(`Gemini batch response did not contain exactly ${expectedCount} summary strings`);
+  }
+
+  return parsed.map((summary) => summary.trim());
+}
+
+// One Gemini call for the whole edition instead of one per article: keeps
+// rate-limit exposure to a single request and means every card in a day's
+// edition went through the same pass — either all get the AI rewrite or
+// (on any failure) all keep their existing fallback, never a silent mix.
+export async function summarizeEdition(articles: SummarizableArticle[], apiKey: string): Promise<string[]> {
+  const prompt = buildBatchPrompt(articles);
 
   const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.6, maxOutputTokens: 120 },
+      generationConfig: { temperature: 0.6, maxOutputTokens: 220 * articles.length },
     }),
   });
 
@@ -59,28 +101,29 @@ export async function summarizeArticle(
   if (typeof text !== "string" || text.trim().length === 0) {
     throw new Error("Gemini returned no summary text");
   }
-  return text.trim();
+
+  return parseBatchSummaries(text, articles.length);
 }
 
-// Best-effort enhancement layer applied after buildStoredEdition: each
+// Best-effort enhancement layer applied after buildStoredEdition: every
 // article already has a safe truncated summary (see buildEdition.ts), so a
-// failed or slow Gemini call for one article just leaves that one on the
-// existing fallback rather than failing the whole edition.
+// failed or malformed batch call leaves the whole edition on its existing
+// fallback rather than throwing.
 export async function applyAiSummaries(edition: StoredEdition, apiKey: string): Promise<StoredEdition> {
-  const articles = await Promise.all(
-    edition.articles.map(async (article): Promise<StoredArticle> => {
-      try {
-        const aiSummary = await summarizeArticle(
-          { title: article.headline, description: article.summary || null },
-          apiKey,
-        );
-        return { ...article, summary: truncateSummary(aiSummary) };
-      } catch (error) {
-        console.error(`AI summary failed for "${article.headline}", keeping fallback summary:`, error);
-        return article;
-      }
-    }),
-  );
+  try {
+    const summaries = await summarizeEdition(
+      edition.articles.map((article) => ({ title: article.headline, description: article.summary || null })),
+      apiKey,
+    );
 
-  return { ...edition, articles };
+    const articles: StoredArticle[] = edition.articles.map((article, index) => ({
+      ...article,
+      summary: truncateSummary(summaries[index]),
+    }));
+
+    return { ...edition, articles };
+  } catch (error) {
+    console.error("AI batch summary failed, keeping fallback summaries for the whole edition:", error);
+    return edition;
+  }
 }
