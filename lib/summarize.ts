@@ -2,8 +2,12 @@ import { truncateSummary } from "./buildEdition";
 import type { StoredArticle, StoredEdition } from "./buildEdition";
 
 // Free-tier Gemini model. If Google renames/retires this, swap the string —
-// nothing else here depends on the exact model id.
-const GEMINI_MODEL = "gemini-2.5-flash-lite";
+// nothing else here depends on the exact model id. gemini-2.5-flash-lite was
+// retired for this account ("no longer available to new users", confirmed
+// via a live 404 from Gemini's own API on 2026-09-02); gemini-3.5-flash-lite
+// is Google's own named replacement and was verified working directly
+// against the production API key before switching.
+const GEMINI_MODEL = "gemini-3.5-flash-lite";
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // Voice guide for the AI-rewritten summary, decided with the user directly:

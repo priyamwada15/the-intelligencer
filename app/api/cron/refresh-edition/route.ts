@@ -4,8 +4,9 @@ import { applyAiSummaries } from "@/lib/summarize";
 import {
   getEasternDateKey,
   getEasternHour,
-  isScheduledRefreshHour,
   isForceRunAllowed,
+  shouldSkipRefresh,
+  readEdition,
   writeEdition,
   pruneOldEditions,
 } from "@/lib/blobStorage";
@@ -17,21 +18,25 @@ export async function POST(request: Request): Promise<Response> {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const hour = getEasternHour();
-  const forceRun = isForceRunAllowed(process.env.NODE_ENV, new URL(request.url).searchParams.get("force"));
-
-  if (!isScheduledRefreshHour(hour) && !forceRun) {
-    return Response.json({ skipped: true, reason: `hour ${hour} is not a scheduled refresh time` });
-  }
-
   const apiKey = process.env.NEWSDATA_API_KEY;
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
   if (!apiKey || !blobToken) {
     return new Response("Missing NEWSDATA_API_KEY or BLOB_READ_WRITE_TOKEN", { status: 500 });
   }
 
+  const hour = getEasternHour();
+  const forceRun = isForceRunAllowed(process.env.NODE_ENV, new URL(request.url).searchParams.get("force"));
+  const dateKey = getEasternDateKey();
+
+  const existingEdition = await readEdition(dateKey, blobToken);
+  if (shouldSkipRefresh(hour, forceRun, existingEdition !== null)) {
+    return Response.json({
+      skipped: true,
+      reason: `hour ${hour} is not a scheduled refresh time, and today's edition already exists`,
+    });
+  }
+
   try {
-    const dateKey = getEasternDateKey();
     const rawArticles = await fetchTechNews(apiKey);
     const edition = buildStoredEdition(rawArticles, dateKey);
 

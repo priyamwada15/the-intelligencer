@@ -17,6 +17,7 @@ import {
   getEasternHour,
   isScheduledRefreshHour,
   isForceRunAllowed,
+  shouldSkipRefresh,
   writeEdition,
   listRecentEditionDateKeys,
   readEdition,
@@ -73,6 +74,25 @@ describe("isScheduledRefreshHour", () => {
     expect(isScheduledRefreshHour(17)).toBe(false);
     expect(isScheduledRefreshHour(23)).toBe(false);
     expect(isScheduledRefreshHour(0)).toBe(false);
+  });
+});
+
+describe("shouldSkipRefresh", () => {
+  it("does not skip when the hour matches a scheduled window", () => {
+    expect(shouldSkipRefresh(15, false, true)).toBe(false);
+  });
+
+  it("skips when the hour doesn't match a scheduled window and today's edition already exists", () => {
+    expect(shouldSkipRefresh(11, false, true)).toBe(true);
+  });
+
+  it("does not skip on an off-hour trigger when today has no edition yet (self-healing catch-up)", () => {
+    expect(shouldSkipRefresh(11, false, false)).toBe(false);
+  });
+
+  it("never skips when forceRun is true, regardless of hour or whether today's edition exists", () => {
+    expect(shouldSkipRefresh(3, true, true)).toBe(false);
+    expect(shouldSkipRefresh(3, true, false)).toBe(false);
   });
 });
 

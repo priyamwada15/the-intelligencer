@@ -54,6 +54,25 @@ export function isForceRunAllowed(nodeEnv: string | undefined, forceParam: strin
   return nodeEnv !== "production" && forceParam === "true";
 }
 
+// GitHub Actions' schedule trigger has been observed drifting far past the
+// hour(+1) tolerance above -- sometimes by several hours, and the drift can
+// compound run over run rather than self-correcting. If every trigger for a
+// whole day lands outside the accepted window, the old hour-only gate would
+// skip every one of them and that day would never get an edition at all.
+// This gate only enforces the hour window once today already has *some*
+// edition (to avoid redundant NewsData/Gemini calls on an off-hour retry);
+// if today has nothing yet, any trigger -- on-hour or not -- is let through
+// so the day is never silently left without a refresh.
+export function shouldSkipRefresh(
+  hour: number,
+  forceRun: boolean,
+  editionExistsForToday: boolean,
+): boolean {
+  if (forceRun) return false;
+  if (!editionExistsForToday) return false;
+  return !isScheduledRefreshHour(hour);
+}
+
 function blobPathForDate(dateKey: string): string {
   return `${EDITION_PREFIX}${dateKey}.json`;
 }
