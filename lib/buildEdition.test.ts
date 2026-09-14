@@ -106,6 +106,19 @@ describe("buildStoredEdition", () => {
     expect(article.category).toBe("MODELS");
   });
 
+  it("filters out political news/figures even when AI-relevant", () => {
+    const edition = buildStoredEdition(
+      [
+        makeArticle({
+          title: "Trump signs executive order on AI regulation",
+          description: "The order directs federal agencies to adopt AI tools.",
+        }),
+      ],
+      "2026-08-26",
+    );
+    expect(edition.articles).toHaveLength(0);
+  });
+
   it("caps the result at 6 articles", () => {
     const many = Array.from({ length: 10 }, (_, i) =>
       makeArticle({ article_id: String(i), title: `OpenAI story number ${i}` }),

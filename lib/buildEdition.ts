@@ -1,5 +1,6 @@
 import type { NewsDataArticle } from "@/lib/newsdata";
 import { isAiRelevant } from "@/lib/relevance";
+import { isPoliticalContent } from "@/lib/politicalFilter";
 import { categorizeArticle } from "@/lib/categorize";
 import type { CategoryId } from "@/lib/categories";
 import type { Edition } from "@/lib/editions";
@@ -63,6 +64,7 @@ export function formatEditionDateFromKey(dateKey: string): string {
 export function buildStoredEdition(rawArticles: NewsDataArticle[], dateKey: string): StoredEdition {
   const articles: StoredArticle[] = rawArticles
     .filter((raw) => isAiRelevant(raw.title, raw.description))
+    .filter((raw) => !isPoliticalContent(raw.title, raw.description))
     .slice(0, MAX_ARTICLES)
     .map((raw) => ({
       category: categorizeArticle(raw.title, raw.description),
