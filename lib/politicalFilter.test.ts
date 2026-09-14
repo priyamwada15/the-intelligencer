@@ -34,4 +34,18 @@ describe("isPoliticalContent", () => {
   it("does not match unrelated words that merely contain a political figure's surname", () => {
     expect(isPoliticalContent("Trumpington startup raises funding", "")).toBe(false);
   });
+
+  it("matches a lawmaker/legislative-body figure not on the named-heads-of-state list", () => {
+    expect(
+      isPoliticalContent(
+        "US Lawmakers Advance AI Expansion Despite Cautions From Tech Industry Leaders",
+        "House Speaker Mike Johnson argued that a rush to regulate could backfire.",
+      ),
+    ).toBe(true);
+  });
+
+  it("matches 'congress' and 'senate' as legislative-body terms", () => {
+    expect(isPoliticalContent("Congress debates new AI oversight bill", "")).toBe(true);
+    expect(isPoliticalContent("Senators question AI company executives", "")).toBe(true);
+  });
 });

@@ -17,6 +17,11 @@ const POLITICAL_PHRASES = [
   "presidential election",
   "general election",
   "midterm election",
+  "house speaker",
+  "speaker of the house",
+  "house of representatives",
+  "house lawmakers",
+  "senate lawmakers",
 ];
 
 const POLITICAL_WORDS = [
@@ -28,8 +33,14 @@ const POLITICAL_WORDS = [
   "campaign",
   "president",
   "senator",
+  "senators",
   "congressman",
   "congresswoman",
+  "congress",
+  "lawmaker",
+  "lawmakers",
+  "legislator",
+  "legislators",
   "governor",
   "minister",
   "chancellor",
