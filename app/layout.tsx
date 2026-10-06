@@ -28,6 +28,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${sora.variable} ${figtree.variable} font-sora antialiased`}>
         {children}
+        {/* Fixed bottom-right on wider screens; on phones it follows the page so it never covers the card */}
+        <a
+          href="https://github.com/priyamwada15/the-intelligencer"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-6 ml-auto mr-6 block w-fit md:fixed md:bottom-6 md:right-6 md:z-10 md:m-0 font-figtree text-[14px] font-normal text-text-secondary transition-colors duration-200 ease-out hover:text-link-hover"
+        >
+          GitHub
+        </a>
       </body>
     </html>
   );

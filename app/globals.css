@@ -16,6 +16,9 @@
   --color-border-subtle: #dbe3ca;
   --color-border-black: #00000014;
 
+  /* Link hover — the rose used across priyamwada.me */
+  --color-link-hover: #c02b53;
+
   /* Type scale (derived from Figma) */
   --text-display: 28px;
   --text-display--line-height: 1.2;
